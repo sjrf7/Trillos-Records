@@ -30,6 +30,15 @@ try {
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            // Validate profile_pic
+            if ($user && $user['profile_pic']) {
+                $pic = $user['profile_pic'];
+                // Check if it's a URL or a valid local file
+                if (!filter_var($pic, FILTER_VALIDATE_URL) && !file_exists($pic)) {
+                    $user['profile_pic'] = null;
+                }
+            }
+
             echo json_encode([
                 'success' => true,
                 'stats' => [

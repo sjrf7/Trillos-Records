@@ -29,7 +29,14 @@ if (isset($_SESSION['user_id'])) {
         // User Info
         $stmt = $pdo->prepare("SELECT profile_pic FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
-        $userProfilePic = $stmt->fetchColumn();
+        $tempPic = $stmt->fetchColumn();
+        
+        // Validate image: URL or existing local file
+        if ($tempPic && (filter_var($tempPic, FILTER_VALIDATE_URL) || file_exists($tempPic))) {
+            $userProfilePic = $tempPic;
+        } else {
+            $userProfilePic = null;
+        }
 
         // Liked Songs
         $stmt = $pdo->prepare("SELECT item_id FROM likes WHERE user_id = ? AND type = 'song'");

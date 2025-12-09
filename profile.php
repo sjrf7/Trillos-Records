@@ -21,7 +21,23 @@ if (!isset($_SESSION['user_id'])) {
         .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .tab-active { border-bottom: 2px solid #EAB308; color: #EAB308; }
         .tab-inactive { color: #9CA3AF; }
+        .tab-inactive { color: #9CA3AF; }
         .tab-inactive:hover { color: #fff; }
+        
+        /* Password Toggle Styles */
+        .input-group { position: relative; }
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 10;
+            transition: color 0.3s ease;
+        }
+        .password-toggle:hover { color: var(--color-primary, #EAB308); }
+        .input-with-icon { padding-right: 2.5rem; }
     </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -247,12 +263,18 @@ if (!isset($_SESSION['user_id'])) {
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Contraseña Actual</label>
-                    <input type="password" id="current-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                    <div class="input-group">
+                        <input type="password" id="current-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition input-with-icon" placeholder="••••••••">
+                        <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('current-password', this)"></i>
+                    </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Nueva Contraseña</label>
-                    <input type="password" id="new-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                    <div class="input-group">
+                        <input type="password" id="new-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition input-with-icon" placeholder="••••••••">
+                        <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('new-password', this)"></i>
+                    </div>
                 </div>
                 
                 <!-- Password Requirements -->
@@ -273,7 +295,10 @@ if (!isset($_SESSION['user_id'])) {
                 
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Confirmar Nueva Contraseña</label>
-                    <input type="password" id="confirm-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                    <div class="input-group">
+                        <input type="password" id="confirm-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition input-with-icon" placeholder="••••••••">
+                        <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('confirm-password', this)"></i>
+                    </div>
                 </div>
             </div>
             
@@ -287,6 +312,18 @@ if (!isset($_SESSION['user_id'])) {
     <!-- Scripts -->
     <script>
         lucide.createIcons();
+
+        function togglePassword(inputId, toggleIcon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggleIcon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                toggleIcon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
 
         // Load Initial Data
         document.addEventListener('DOMContentLoaded', () => {
@@ -343,8 +380,12 @@ if (!isset($_SESSION['user_id'])) {
             api(fd).then(data => {
                 if (data.success) {
                     document.getElementById('user-name').textContent = data.user.full_name;
+                    const img = document.getElementById('profile-pic');
                     if (data.user.profile_pic) {
-                        document.getElementById('profile-pic').src = data.user.profile_pic;
+                        img.src = data.user.profile_pic;
+                    } else {
+                        // Use user's name for initials with brand colors (Gold background, Black text)
+                        img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.full_name)}&background=FFD700&color=000000`; 
                     }
                     document.getElementById('stat-playlists').textContent = data.stats.playlists;
                     document.getElementById('stat-likes').textContent = data.stats.likes;

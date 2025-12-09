@@ -131,7 +131,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 1rem 1rem 3rem;
+            padding: 1rem 3rem 1rem 3rem;
             border-radius: 0.75rem;
             color: white;
             outline: none;
@@ -296,6 +296,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-family: 'Inter', sans-serif;
             font-weight: 600;
         }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 10;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--color-primary);
+        }
     </style>
 </head>
 
@@ -334,8 +349,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i data-lucide="mail" class="input-icon w-5 h-5"></i>
                 </div>
                 <div class="input-group">
-                    <input type="password" name="password" placeholder="Contraseña" class="input-field" required>
+                    <input type="password" name="password" id="login_password" placeholder="Contraseña" class="input-field" required>
                     <i data-lucide="lock" class="input-icon w-5 h-5"></i>
+                    <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('login_password', this)"></i>
                 </div>
 
                 <div class="flex justify-between items-center mb-6 text-sm">
@@ -364,6 +380,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="input-group">
                     <input type="password" name="password" id="reg_password" placeholder="Contraseña" class="input-field" required>
                     <i data-lucide="lock" class="input-icon w-5 h-5"></i>
+                    <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('reg_password', this)"></i>
                 </div>
                 
                 <!-- Password Requirements (Minimalist) -->
@@ -384,8 +401,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
 
                 <div class="input-group">
-                    <input type="password" name="confirm_password" placeholder="Confirmar Contraseña" class="input-field" required>
+                    <input type="password" name="confirm_password" id="reg_confirm_password" placeholder="Confirmar Contraseña" class="input-field" required>
                     <i data-lucide="check-circle" class="input-icon w-5 h-5"></i>
+                    <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('reg_confirm_password', this)"></i>
                 </div>
 
                 <button type="submit" class="gold-btn w-full py-3 rounded-lg text-lg mb-4">
@@ -586,6 +604,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 text.classList.add('text-gray-500');
             }
         });
+
+        function togglePassword(inputId, toggleIcon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggleIcon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                toggleIcon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
     </script>
 </body>
 
