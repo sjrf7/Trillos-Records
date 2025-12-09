@@ -19,13 +19,27 @@ try {
 }
 
 
-// Fetch user info if logged in
+// Fetch user info and likes if logged in
 $userProfilePic = null;
+$likedSongs = [];
+$likedVideos = [];
+
 if (isset($_SESSION['user_id'])) {
     try {
+        // User Info
         $stmt = $pdo->prepare("SELECT profile_pic FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $userProfilePic = $stmt->fetchColumn();
+
+        // Liked Songs
+        $stmt = $pdo->prepare("SELECT item_id FROM likes WHERE user_id = ? AND type = 'song'");
+        $stmt->execute([$_SESSION['user_id']]);
+        $likedSongs = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Liked Videos
+        $stmt = $pdo->prepare("SELECT item_id FROM likes WHERE user_id = ? AND type = 'video'");
+        $stmt->execute([$_SESSION['user_id']]);
+        $likedVideos = $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Exception $e) {
         // Ignore error
     }
@@ -71,13 +85,13 @@ if (isset($_SESSION['user_id'])) {
         /* Estilo para el Hero (video de cabecera) */
         .hero-video-container {
             position: relative;
-            height: calc(80vh + 60px);
-            /* Altura generosa para el video */
+            height: 100vh;
+            /* Altura completa para evitar espacios grises */
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 4rem;
+            margin-bottom: 0;
         }
 
         .hero-video {
@@ -233,7 +247,7 @@ if (isset($_SESSION['user_id'])) {
             top: 1.5rem;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            z-index: 2005;
             display: flex;
             align-items: center;
             padding: 0.6rem 3rem;
@@ -371,7 +385,7 @@ if (isset($_SESSION['user_id'])) {
         <div id="dock-main-content" class="flex items-center w-full justify-between">
             <div class="ios-dock-logo shrink-0">
             <a href="#">
-                <img src="./Nueva carpeta/Logo.png" alt="Trillos Home">
+                <img src="./assets/Logo.png" alt="Trillos Home">
             </a>
         </div>
         <div class="flex items-center space-x-1 sm:space-x-2">
@@ -467,7 +481,7 @@ if (isset($_SESSION['user_id'])) {
         <video class="hero-video" autoplay loop muted playsinline
             poster="https://placehold.co/1920x1080/000/FFF?text=Trillos+Visual+Records+Video">
             <!-- Video de cabecera local -->
-            <source src="./Nueva carpeta/video_header.mp4" type="video/mp4">
+            <source src="./assets/video_header.mp4" type="video/mp4">
             Tu navegador no soporta la etiqueta de video.
         </video>
         <div class="hero-overlay"></div>
@@ -476,9 +490,13 @@ if (isset($_SESSION['user_id'])) {
                 Trillos Visual Records
             </h1>
             <p class="text-xl md:text-3xl text-gray-300 font-light mb-8 max-w-2xl mx-auto">
-                Donde la Música Se Ve. | El Sonido del Mañana.
+                El Aliado de tus momentos | Palabras que inspiran
             </p>
             <!-- Search Bar Removed -->
+            <a href="#music" class="inline-flex items-center gap-2 px-8 py-3 bg-[#EAB308] hover:bg-yellow-400 text-black font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+                <i data-lucide="headphones" class="w-5 h-5"></i>
+                Escucha el Nuevo Sencillo
+            </a>
         </div>
     </header>
 
@@ -514,15 +532,20 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <!-- Share Button -->
                         <button onclick="event.stopPropagation(); openShareModal('song', <?php echo $song['id']; ?>)" 
-                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Compartir">
                             <i data-lucide="share-2" class="w-4 h-4"></i>
                         </button>
                         <!-- Like Button -->
+                        <?php 
+                        $isLiked = in_array($song['id'], $likedSongs);
+                        $likeClass = $isLiked ? 'text-red-500' : 'text-white';
+                        $fillAttr = $isLiked ? 'fill="currentColor"' : '';
+                        ?>
                         <button onclick="event.stopPropagation(); toggleLike('song', <?php echo $song['id']; ?>, this)" 
-                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 text-white hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 <?php echo $likeClass; ?> hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Me Gusta">
-                            <i data-lucide="heart" class="w-4 h-4"></i>
+                            <i data-lucide="heart" class="w-4 h-4" <?php echo $fillAttr; ?>></i>
                         </button>
                         <div class="mt-4 text-center">
                             <p class="text-lg font-semibold text-white truncate"><?php echo htmlspecialchars($song['title']); ?></p>
@@ -566,15 +589,20 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <!-- Share Button -->
                         <button onclick="event.stopPropagation(); openShareModal('video', <?php echo $video['id']; ?>)" 
-                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Compartir">
                             <i data-lucide="share-2" class="w-4 h-4"></i>
                         </button>
                         <!-- Like Button -->
+                        <?php 
+                        $isLikedVideo = in_array($video['id'], $likedVideos);
+                        $likeClassVideo = $isLikedVideo ? 'text-red-500' : 'text-white';
+                        $fillAttrVideo = $isLikedVideo ? 'fill="currentColor"' : '';
+                        ?>
                         <button onclick="event.stopPropagation(); toggleLike('video', <?php echo $video['id']; ?>, this)" 
-                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 text-white hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 <?php echo $likeClassVideo; ?> hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Me Gusta">
-                            <i data-lucide="heart" class="w-4 h-4"></i>
+                            <i data-lucide="heart" class="w-4 h-4" <?php echo $fillAttrVideo; ?>></i>
                         </button>
                         <p class="mt-3 text-lg font-semibold text-white text-center truncate"><?php echo htmlspecialchars($video['title']); ?></p>
                     </div>
@@ -595,28 +623,28 @@ if (isset($_SESSION['user_id'])) {
             </h2>
             <p class="text-lg mb-8 text-gray-400">Síguenos y comparte nuestra música con el mundo.</p>
 
-            <!-- Botones de Compartir (REQUISITO) -->
+            <!-- Botones de Redes Sociales -->
             <div class="flex justify-center space-x-4 mb-8">
-                <button class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center"
-                    onclick="sharePage('facebook')">
+                <!-- Facebook -->
+                <a href="https://www.facebook.com/suspirosqueenloquecen/" target="_blank" class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center hover:bg-white/10 transition-colors">
                     <i data-lucide="facebook" class="w-6 h-6"></i>
-                </button>
-                <button class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center"
-                    onclick="sharePage('twitter')">
-                    <i data-lucide="twitter" class="w-6 h-6"></i>
-                </button>
-                <button class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center"
-                    onclick="sharePage('whatsapp')">
-                    <i data-lucide="message-square" class="w-6 h-6"></i>
-                </button>
-                <button class="share-button p-3 rounded-full bg-yellow-500 text-black flex items-center"
-                    onclick="copyLink()">
-                    <i data-lucide="link" class="w-6 h-6"></i>
-                </button>
+                </a>
+                <!-- Instagram (Replaces Twitter) -->
+                <a href="https://www.instagram.com/trillos_visual_records/" target="_blank" class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center hover:bg-white/10 transition-colors">
+                    <i data-lucide="instagram" class="w-6 h-6"></i>
+                </a>
+                <!-- WhatsApp -->
+                <a href="https://wa.me/50765763880" target="_blank" class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center hover:bg-white/10 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                        <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
+                        <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" />
+                    </svg>
+                </a>
+
             </div>
 
-            <p class="text-sm text-gray-500">Para consultas: <a href="mailto:info@trillosvisualrecords.com"
-                    class="text-yellow-600 hover:text-yellow-400 transition-colors">info@trillosvisualrecords.com</a>
+            <p class="text-sm text-gray-500">Para consultas: <a href="mailto:narracionesinsitus@gmail.com"
+                    class="text-yellow-600 hover:text-yellow-400 transition-colors">narracionesinsitus@gmail.com</a>
             </p>
         </section>
 
@@ -683,7 +711,8 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- VENTANA MODAL PARA VIDEOS (REQUISITO: 1 sola ventana) -->
     <div id="video-modal"
-        class="fixed inset-0 bg-black bg-opacity-90 hidden flex items-center justify-center z-[100] transition-opacity duration-300 opacity-0"
+    <div id="video-modal"
+        class="fixed inset-0 bg-black bg-opacity-90 hidden flex items-center justify-center z-[2100] transition-opacity duration-300 opacity-0"
         onclick="closeVideoModal()">
         <div class="relative w-11/12 max-w-4xl rounded-xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
             <button class="absolute top-4 right-4 text-white hover:text-yellow-500 z-10" onclick="closeVideoModal()">
@@ -700,7 +729,7 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- MODAL DE MENSAJES PREMIUM (Sustituye a alert/confirm) -->
     <div id="message-modal"
-        class="fixed inset-0 premium-modal-backdrop hidden flex items-center justify-center z-[200] transition-opacity duration-300 opacity-0">
+        class="fixed inset-0 premium-modal-backdrop hidden flex items-center justify-center z-[3000] transition-opacity duration-300 opacity-0">
         <div class="premium-modal-content p-8 rounded-2xl max-w-sm w-full relative overflow-hidden text-center">
              <!-- Decoración de fondo -->
              <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
@@ -725,7 +754,7 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <!-- SHARE MODAL (Social & Copy) -->
-    <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[200] transition-opacity duration-300 opacity-0" onclick="closeShareModal()">
+    <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[2200] transition-opacity duration-300 opacity-0" onclick="closeShareModal()">
         <div class="relative w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl transform transition-all scale-95 opacity-0" id="share-modal-content" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-bold text-white flex items-center gap-2">
@@ -843,6 +872,61 @@ if (isset($_SESSION['user_id'])) {
         // -------------------------
         // CONTROL DE REPRODUCTOR
         // -------------------------
+        // -------------------------
+        // FUNCIONES DE PERFIL (Injected)
+        // -------------------------
+        function addToHistory(type, id) {
+             if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) return;
+             const formData = new FormData();
+             formData.append('action', 'add_history');
+             formData.append('type', type);
+             formData.append('id', id);
+             fetch('api_profile.php', { method: 'POST', body: formData }).catch(e => console.error(e));
+        }
+
+        function toggleLike(type, id, btn) {
+            if (!isLoggedIn) {
+                showMessage('Debes iniciar sesión para dar Me Gusta.', '¡Únete a la Comunidad!');
+                return;
+            }
+            const icon = btn.querySelector('svg') || btn.querySelector('i');
+            const isLiked = btn.classList.contains('text-red-500');
+            
+            // UI Optimista
+            if(isLiked) {
+                btn.classList.remove('text-red-500');
+                btn.classList.add('text-white');
+                if(icon) icon.setAttribute('fill', 'none'); 
+            } else {
+                btn.classList.add('text-red-500');
+                btn.classList.remove('text-white');
+                if(icon) icon.setAttribute('fill', 'currentColor');
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'toggle_like');
+            formData.append('type', type);
+            formData.append('id', id);
+            
+            fetch('api_profile.php', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if(!data.success) {
+                    // Revertir
+                     if(isLiked) {
+                        btn.classList.add('text-red-500');
+                        btn.classList.remove('text-white');
+                         if(icon) icon.setAttribute('fill', 'currentColor');
+                    } else {
+                        btn.classList.remove('text-red-500');
+                        btn.classList.add('text-white');
+                         if(icon) icon.setAttribute('fill', 'none'); 
+                    }
+                }
+            })
+            .catch(e => console.error(e));
+        }
+
         function loadAndPlayTrack(card) {
             if (!isLoggedIn) {
                 showMessage('Para disfrutar de la música de alta calidad de <strong>Trillos Records</strong>, por favor inicia sesión.');
@@ -998,6 +1082,37 @@ if (isset($_SESSION['user_id'])) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for URL params to auto-play
+            const urlParams = new URLSearchParams(window.location.search);
+            const songId = urlParams.get('song');
+            const videoId = urlParams.get('video');
+
+            if (songId) {
+                const song = allSongs.find(s => s.id == songId);
+                if (song) {
+                    // Create a dummy element to pass to loadAndPlayTrack or call logic directly
+                    // Since loadAndPlayTrack expects an element with data attributes, let's look for one or create mock
+                    // Easier: just set the player state manually if function is coupled to DOM
+                    // Check if there is a DOM element for this song (e.g. in search results or hidden list?)
+                    // Actually, we can just reproduce loadAndPlayTrack logic here for clean variable access:
+                    loadAndPlayTrack({
+                        dataset: {
+                            title: song.title,
+                            artist: song.artist,
+                            cover: song.cover_path,
+                            audioUrl: song.audio_path,
+                            id: song.id
+                        },
+                        getAttribute: () => null // Prevent error if logic falls back
+                    });
+                }
+            } else if (videoId) {
+                const video = allVideos.find(v => v.id == videoId);
+                if (video) {
+                    openVideoModal(video.video_path, video.id);
+                }
+            }
+
             const searchInput = document.getElementById('dock-search-input');
             if(searchInput) {
                 searchInput.addEventListener('input', (e) => {
@@ -1131,10 +1246,23 @@ if (isset($_SESSION['user_id'])) {
         }
 
         function openShareModal(type, id) {
+             if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) {
+                showMessage('Debes iniciar sesión para compartir contenido exclusivo.', '¡Únete a la Comunidad!');
+                return;
+             }
              const modal = document.getElementById('share-modal');
+             const content = document.getElementById('share-modal-content');
              if(modal) {
                  modal.classList.remove('hidden');
-                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                 // Force reflow
+                 void modal.offsetWidth;
+                 modal.classList.remove('opacity-0');
+                 
+                 if(content) {
+                     content.classList.remove('scale-95', 'opacity-0');
+                     content.classList.add('scale-100', 'opacity-100');
+                 }
+                 lucide.createIcons();
              }
              const input = document.getElementById('share-link-input');
              if(input) input.value = window.location.href + '?' + type + '=' + id;
@@ -1142,6 +1270,13 @@ if (isset($_SESSION['user_id'])) {
         
         function closeShareModal() {
              const modal = document.getElementById('share-modal');
+             const content = document.getElementById('share-modal-content');
+             
+             if(content) {
+                 content.classList.remove('scale-100', 'opacity-100');
+                 content.classList.add('scale-95', 'opacity-0');
+             }
+
              if(modal) {
                  modal.classList.add('opacity-0');
                  setTimeout(() => modal.classList.add('hidden'), 300);
@@ -1151,12 +1286,36 @@ if (isset($_SESSION['user_id'])) {
         function shareSocial(platform) {
             const input = document.getElementById('share-link-input');
             const url = input ? input.value : window.location.href;
+            
             if(platform === 'copy') {
-                 navigator.clipboard.writeText(url);
+                 navigator.clipboard.writeText(url).then(() => {
+                     // Feedback visual
+                     const copyBtn = document.querySelector('button[onclick="shareSocial(\'copy\')"]');
+                     if(copyBtn) {
+                         const originalContent = copyBtn.innerHTML;
+                         copyBtn.innerHTML = `
+                            <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 transition-all">
+                                <i data-lucide="check" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs text-white">¡Copiado!</span>
+                         `;
+                         lucide.createIcons();
+                         setTimeout(() => {
+                             copyBtn.innerHTML = originalContent;
+                             lucide.createIcons();
+                         }, 2000);
+                     }
+                 });
                  return;
             }
             if(platform === 'whatsapp') {
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(url)}`, '_blank');
+            }
+            if(platform === 'facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+            }
+            if(platform === 'telegram') {
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(document.title)}`, '_blank');
             }
         }
         
@@ -1198,7 +1357,56 @@ if (isset($_SESSION['user_id'])) {
     </script>
 
     <!-- Global Search Results Modal (Styled like Profile) -->
-    <div id="search-modal" class="fixed inset-0 bg-black/80 hidden z-[2000] flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div id="share-modal" class="fixed inset-0 bg-black/90 hidden z-[3000] flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div id="share-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 relative">
+            <button onclick="closeShareModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-2 text-center">Compartir</h3>
+            <p class="text-gray-400 text-sm text-center mb-6">Comparte este contenido con tus amigos</p>
+            
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <!-- WhatsApp -->
+                <button onclick="shareSocial('whatsapp')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#25D366]/20 flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-all">
+                        <i data-lucide="message-circle" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">WhatsApp</span>
+                </button>
+                <!-- Facebook -->
+                <button onclick="shareSocial('facebook')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2] group-hover:bg-[#1877F2] group-hover:text-white transition-all">
+                        <i data-lucide="facebook" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Facebook</span>
+                </button>
+                <!-- Telegram -->
+                <button onclick="shareSocial('telegram')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#229ED9]/20 flex items-center justify-center text-[#229ED9] group-hover:bg-[#229ED9] group-hover:text-white transition-all">
+                        <i data-lucide="send" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Telegram</span>
+                </button>
+                <!-- Copy Link -->
+                <button onclick="shareSocial('copy')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-all">
+                        <i data-lucide="link" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Copiar</span>
+                </button>
+            </div>
+
+            <!-- Input readonly with link -->
+            <div class="relative">
+                <input type="text" id="share-link-input" readonly class="w-full bg-black/50 border border-gray-800 text-gray-400 text-sm rounded-lg px-4 py-3 pr-12 focus:outline-none focus:border-yellow-500/50 transition-colors">
+                <button onclick="shareSocial('copy')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-modal" class="fixed inset-0 bg-black/90 hidden z-[2000] flex items-start justify-center pt-28 opacity-0 transition-opacity duration-300">
         <!-- Modal Content -->
         <div id="search-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-4xl w-full h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 relative shadow-2xl shadow-yellow-900/20">
             <div class="flex justify-between items-center mb-6">

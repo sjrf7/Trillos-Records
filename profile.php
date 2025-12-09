@@ -29,12 +29,18 @@ if (!isset($_SESSION['user_id'])) {
     <!-- Navbar Simple -->
     <nav class="fixed top-0 w-full z-50 glass-panel border-b border-white/5 bg-black/80">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="index.php" class="flex items-center gap-2 text-yellow-500 hover:text-yellow-400 transition">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                <span class="font-medium">Volver al Inicio</span>
+            <a href="index.php" class="group flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:border-yellow-500/50 hover:bg-white/10 transition-all duration-300">
+                <div class="w-6 h-6 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-colors">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                </div>
+                <span class="font-medium text-sm text-gray-200 group-hover:text-white">Volver al Inicio</span>
             </a>
+            
             <div class="flex items-center gap-4">
-               <a href="logout.php" class="text-sm text-gray-400 hover:text-white transition">Cerrar Sesión</a>
+               <a href="logout.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm font-medium">
+                   <span>Cerrar Sesión</span>
+                   <i data-lucide="log-out" class="w-4 h-4"></i>
+               </a>
             </div>
         </div>
     </nav>
@@ -77,6 +83,12 @@ if (!isset($_SESSION['user_id'])) {
                         <span class="text-xs text-gray-500 uppercase tracking-wider">Me Gusta</span>
                     </div>
                 </div>
+                
+                <!-- Change Password Button -->
+                <button onclick="openChangePasswordModal()" class="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-500/50 rounded-lg transition-all text-sm font-medium text-gray-300 hover:text-white mx-auto md:mx-0">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span>Cambiar Contraseña</span>
+                </button>
             </div>
         </div>
 
@@ -112,15 +124,28 @@ if (!isset($_SESSION['user_id'])) {
             </div>
 
             <!-- Playlist Detail View -->
-            <div id="playlist-detail-view" class="hidden">
+            <div id="playlist-detail-view" class="hidden group">
                  <div class="flex items-center gap-4 mb-6">
                     <button onclick="closePlaylistDetail()" class="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </button>
-                    <div>
-                        <h2 id="detail-playlist-name" class="text-2xl font-bold text-white">Playlist Name</h2>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-baseline gap-3">
+                             <h2 id="detail-playlist-name" class="text-2xl font-bold text-white">Playlist Name</h2>
+                             <!-- Actions Inline -->
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="openRenamePlaylistModal()" class="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition" title="Editar Nombre">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="confirmDeletePlaylist()" class="p-1.5 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition" title="Eliminar Lista">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
                         <span id="detail-playlist-count" class="text-sm text-gray-500">0 canciones</span>
                     </div>
+                    
                     <button onclick="openAddSongModal()" class="ml-auto bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-full font-medium flex items-center gap-2 transition">
                         <i data-lucide="plus" class="w-4 h-4"></i> Añadir Canciones
                     </button>
@@ -181,6 +206,18 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
+    <!-- Confirm Dialog Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/80 hidden z-[80] flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 relative" id="confirm-modal-content">
+            <h3 class="text-xl font-bold text-white mb-2">¿Estás seguro?</h3>
+            <p class="text-gray-400 mb-6 text-sm">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancelar</button>
+                <button id="confirm-modal-action" class="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Song Selector Modal -->
     <div id="song-selector-modal" class="fixed inset-0 bg-black/80 hidden z-[70] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-lg w-full h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 relative" id="song-selector-content">
@@ -195,6 +232,54 @@ if (!isset($_SESSION['user_id'])) {
             
             <div id="song-selector-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                 <!-- Songs List -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div id="password-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-8 max-w-md w-full transform scale-95 opacity-0 transition-all duration-300 relative">
+            <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-6">Cambiar Contraseña</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Contraseña Actual</label>
+                    <input type="password" id="current-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Nueva Contraseña</label>
+                    <input type="password" id="new-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                </div>
+                
+                <!-- Password Requirements -->
+                <div class="text-xs text-gray-500 space-y-1 pl-1">
+                    <div class="flex items-center space-x-2 req-item" id="pwd-req-lower">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Minúscula</span>
+                    </div>
+                    <div class="flex items-center space-x-2 req-item" id="pwd-req-upper">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Mayúscula</span>
+                    </div>
+                    <div class="flex items-center space-x-2 req-item" id="pwd-req-special">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Carácter especial</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="confirm-password" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closePasswordModal()" class="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancelar</button>
+                <button onclick="changePassword()" class="px-6 py-2 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition">Guardar</button>
             </div>
         </div>
     </div>
@@ -572,6 +657,70 @@ if (!isset($_SESSION['user_id'])) {
         // ------------------------------------------
         // ADD SONG LOGIC
         // ------------------------------------------
+
+
+        function openRenamePlaylistModal() {
+            if(!currentPlaylistId) return;
+            const currentName = document.getElementById('detail-playlist-name').textContent;
+            
+            openModal('Renombrar Lista', 'Nuevo nombre', currentName, async (newName) => {
+                const fd = new FormData();
+                fd.append('action', 'rename_playlist');
+                fd.append('playlist_id', currentPlaylistId);
+                fd.append('name', newName);
+                
+                const res = await api(fd);
+                if (res.success) {
+                    document.getElementById('detail-playlist-name').textContent = newName;
+                    loadPlaylists(); // Refresh list view
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+
+        let confirmCallback = null;
+
+        function confirmDeletePlaylist() {
+            if(!currentPlaylistId) return;
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            const btn = document.getElementById('confirm-modal-action');
+            
+            btn.onclick = async () => {
+                 const fd = new FormData();
+                fd.append('action', 'delete_playlist');
+                fd.append('playlist_id', currentPlaylistId);
+                
+                const res = await api(fd);
+                if(res.success) {
+                    closeConfirmModal();
+                    closePlaylistDetail();
+                    loadPlaylists();
+                    loadStats();
+                } else {
+                    alert(res.message);
+                }
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
         function openAddSongModal() {
             const modal = document.getElementById('song-selector-modal');
             const content = document.getElementById('song-selector-content');
@@ -659,6 +808,124 @@ if (!isset($_SESSION['user_id'])) {
             );
             renderSongSelector(filtered);
         });
+
+        // ------------------------------------------
+        // PASSWORD CHANGE LOGIC
+        // ------------------------------------------
+        function openChangePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('password-modal-content');
+            
+            // Clear inputs
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('password-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // Real-time password validation
+        document.addEventListener('DOMContentLoaded', () => {
+            const newPasswordInput = document.getElementById('new-password');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function() {
+                    const val = this.value;
+                    
+                    const reqLower = document.getElementById('pwd-req-lower');
+                    const reqUpper = document.getElementById('pwd-req-upper');
+                    const reqSpecial = document.getElementById('pwd-req-special');
+                    
+                    // Check Lowercase
+                    if (/[a-z]/.test(val)) {
+                        setValidReq(reqLower);
+                    } else {
+                        setInvalidReq(reqLower);
+                    }
+
+                    // Check Uppercase
+                    if (/[A-Z]/.test(val)) {
+                        setValidReq(reqUpper);
+                    } else {
+                        setInvalidReq(reqUpper);
+                    }
+
+                    // Check Special
+                    if (/[^A-Za-z0-9]/.test(val)) {
+                        setValidReq(reqSpecial);
+                    } else {
+                        setInvalidReq(reqSpecial);
+                    }
+                });
+            }
+        });
+
+        function setValidReq(el) {
+            const dot = el.querySelector('div');
+            const text = el.querySelector('span');
+            dot.classList.remove('bg-gray-600');
+            dot.classList.add('bg-green-500', 'shadow-[0_0_5px_#22c55e]');
+            text.classList.add('text-green-400');
+            text.classList.remove('text-gray-500');
+        }
+
+        function setInvalidReq(el) {
+            const dot = el.querySelector('div');
+            const text = el.querySelector('span');
+            dot.classList.add('bg-gray-600');
+            dot.classList.remove('bg-green-500', 'shadow-[0_0_5px_#22c55e]');
+            text.classList.remove('text-green-400');
+            text.classList.add('text-gray-500');
+        }
+
+        async function changePassword() {
+            const currentPwd = document.getElementById('current-password').value;
+            const newPwd = document.getElementById('new-password').value;
+            const confirmPwd = document.getElementById('confirm-password').value;
+
+            if (!currentPwd || !newPwd || !confirmPwd) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+
+            if (newPwd !== confirmPwd) {
+                alert('Las contraseñas nuevas no coinciden');
+                return;
+            }
+
+            // Validate complexity
+            if (!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/.test(newPwd))) {
+                alert('La contraseña no cumple con los requisitos de seguridad');
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('action', 'change_password');
+            fd.append('current_password', currentPwd);
+            fd.append('new_password', newPwd);
+
+            const res = await api(fd);
+            if (res.success) {
+                alert('Contraseña cambiada exitosamente');
+                closePasswordModal();
+            } else {
+                alert(res.message || 'Error al cambiar la contraseña');
+            }
+        }
 
     </script>
 </body>

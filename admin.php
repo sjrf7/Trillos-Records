@@ -339,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-20 hidden md:flex">
         <div class="p-8">
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-                <img src="./Nueva carpeta/Logo.png" alt="Trillos Records" class="h-12 w-auto object-contain">
+                <img src="./assets/Logo.png" alt="Trillos Records" class="h-12 w-auto object-contain">
                 <span>Trillos<span class="text-yellow-500">Admin</span></span>
             </h1>
         </div>
@@ -362,14 +362,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 <i data-lucide="video" class="w-5 h-5"></i>
                 Biblioteca de Videos
             </button>
-        </nav>
-
-        <div class="p-4 border-t border-white/5">
-            <a href="index.php" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                <i data-lucide="log-out" class="w-5 h-5"></i>
+            <a href="index.php" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-red-500 hover:text-white hover:bg-red-600 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-red-600/20 group">
+                <i data-lucide="log-out" class="w-5 h-5 group-hover:animate-pulse"></i>
                 Volver al Sitio
             </a>
-        </div>
+        </nav>
     </aside>
 
     <!-- Main Content -->
@@ -377,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <!-- Header Mobile -->
         <div class="md:hidden p-4 glass-panel flex justify-between items-center sticky top-0 z-30">
             <div class="flex items-center gap-2">
-                <img src="./Nueva carpeta/Logo.png" alt="Logo" class="h-8 w-auto">
+                <img src="./assets/Logo.png" alt="Logo" class="h-8 w-auto">
                 <h1 class="font-bold text-lg text-white">Trillos<span class="text-yellow-500">Admin</span></h1>
             </div>
             <div class="flex items-center gap-3">
@@ -476,7 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     </div>
 
                     <!-- Video Add Card -->
-                    <div class="glass-panel rounded-2xl p-8 h-fit">
+                    <div class="glass-panel rounded-2xl p-8 h-full">
                         <div class="flex items-center gap-3 mb-8">
                             <i data-lucide="video" class="text-red-500 w-6 h-6"></i>
                             <h3 class="text-xl font-semibold text-gray-100">Subir Video</h3>
@@ -648,9 +645,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
 
                 <!-- Recent Activity Feed -->
-                <div class="glass-panel rounded-2xl p-8 max-h-[500px] overflow-y-auto">
-                    <h3 class="text-xl font-bold text-white mb-6 sticky top-0 backdrop-blur-md py-2 z-10">Actividad Reciente</h3>
-                    <div class="space-y-6">
+                <div class="glass-panel rounded-2xl p-8 h-[500px] flex flex-col">
+                    <h3 class="text-xl font-bold text-white mb-6">Actividad Reciente</h3>
+                    <div class="space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1">
                         <?php foreach ($recentActivity as $activity): ?>
                         <div class="flex items-start gap-4 pb-6 border-b border-gray-800 last:border-0 last:pb-0">
                             <div class="mt-1">
@@ -882,7 +879,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             document.getElementById('edit-video-id').value = video.id;
             document.getElementById('edit-video-title').value = video.title;
-            document.getElementById('edit-video-youtube-id').value = video.youtube_id;
             
             modal.classList.remove('hidden');
             setTimeout(() => {

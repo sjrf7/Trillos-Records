@@ -87,6 +87,48 @@ try {
             echo json_encode(['success' => true, 'message' => 'Lista creada']);
             break;
 
+        case 'delete_playlist':
+            $playlist_id = $_POST['playlist_id'] ?? 0;
+            
+            // Verify ownership
+            $stmt = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
+            $stmt->execute([$playlist_id, $user_id]);
+            if (!$stmt->fetch()) throw new Exception('Lista no encontrada o permiso denegado');
+            
+            // Delete items first (safe approach)
+            $stmt = $pdo->prepare("DELETE FROM playlist_items WHERE playlist_id = ?");
+            $stmt->execute([$playlist_id]);
+            
+            // Delete playlist
+            $stmt = $pdo->prepare("DELETE FROM playlists WHERE id = ?");
+            $stmt->execute([$playlist_id]);
+            
+            echo json_encode(['success' => true, 'message' => 'Lista eliminada']);
+            break;
+
+        case 'rename_playlist':
+            $playlist_id = $_POST['playlist_id'] ?? 0;
+            $name = trim($_POST['name'] ?? '');
+            
+            if (empty($name)) throw new Exception('El nombre no puede estar vacío');
+            
+            // Verify ownership and update
+            $stmt = $pdo->prepare("UPDATE playlists SET name = ? WHERE id = ? AND user_id = ?");
+            $result = $stmt->execute([$name, $playlist_id, $user_id]);
+            
+            if ($stmt->rowCount() === 0) {
+                 // Check if it was because ID/User mismatch or just same name
+                 // But for UI feedback, success is fine if it exists. 
+                 // Let's strict check ownership if needed, but rowCount 0 is fine if name unchanged.
+                 // Ideally verify ownership first to distinguish.
+                 $check = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
+                 $check->execute([$playlist_id, $user_id]);
+                 if (!$check->fetch()) throw new Exception('Lista no encontrada o permiso denegado');
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Nombre actualizado']);
+            break;
+
         case 'toggle_like':
             $type = $_POST['type'] ?? ''; // 'song' or 'video'
             $item_id = $_POST['item_id'] ?? 0;
@@ -160,6 +202,7 @@ try {
                 FROM history h
                 JOIN songs s ON h.item_id = s.id
                 WHERE h.user_id = ? AND h.type = 'song'
+                ORDER BY h.played_at DESC LIMIT 10
             ");
             $stmt->execute([$user_id]);
             $level1 = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -170,6 +213,7 @@ try {
                 FROM history h
                 JOIN videos v ON h.item_id = v.id
                 WHERE h.user_id = ? AND h.type = 'video'
+                ORDER BY h.played_at DESC LIMIT 10
             ");
             $stmt->execute([$user_id]);
             $level2 = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -181,7 +225,7 @@ try {
                 return strtotime($b['played_at']) - strtotime($a['played_at']);
             });
 
-            echo json_encode(['success' => true, 'history' => array_slice($history, 0, 50)]); // Limit to 50
+            echo json_encode(['success' => true, 'history' => array_slice($history, 0, 10)]); // Limit to 10
             break;
             
         case 'get_playlists':
@@ -275,6 +319,43 @@ try {
             $stmt = $pdo->query("SELECT id, title, artist, cover_path FROM songs ORDER BY title ASC");
             $songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'songs' => $songs]);
+            break;
+
+        case 'change_password':
+            $current_password = $_POST['current_password'] ?? '';
+            $new_password = $_POST['new_password'] ?? '';
+            
+            if (empty($current_password) || empty($new_password)) {
+                throw new Exception('Todos los campos son requeridos');
+            }
+            
+            // Validate new password complexity
+            if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/', $new_password)) {
+                throw new Exception('La contraseña no cumple con los requisitos de seguridad');
+            }
+            
+            // Get current password hash
+            $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$user) {
+                throw new Exception('Usuario no encontrado');
+            }
+            
+            // Verify current password
+            if (!password_verify($current_password, $user['password_hash'])) {
+                throw new Exception('La contraseña actual es incorrecta');
+            }
+            
+            // Hash new password
+            $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
+            
+            // Update password
+            $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+            $stmt->execute([$new_hash, $user_id]);
+            
+            echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
             break;
 
         default:

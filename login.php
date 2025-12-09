@@ -16,6 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($pass !== $confirm) {
             $message = "Las contraseñas no coinciden.";
             $msg_type = "error";
+        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/', $pass)) {
+            $message = "La contraseña no cumple con los requisitos de seguridad.";
+            $msg_type = "error";
         } else {
             // Verificar si el correo ya existe
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -95,9 +98,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             animation: gradientBG 15s ease infinite;
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow-y: auto; /* Enable scrolling */
         }
 
         @keyframes gradientBG {
@@ -237,19 +239,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: #800080;
             /* Purple accent for contrast */
         }
+        /* Custom Google Button Styles */
+        .google-wrapper {
+            position: relative;
+            width: 100%;
+            height: 52px; /* Matches py-3 + font size approx */
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .google-wrapper:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .g_id_signin {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            opacity: 0.01 !important;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        /* Ensure the Google iframe inside covers everything */
+        .g_id_signin > div {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .g_id_signin iframe {
+            width: 100% !important;
+            height: 100% !important;
+            transform: scale(1.1); /* Slight Zoom to ensure coverage */
+        }
+
+        .google-custom-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            color: #1f1f1f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            z-index: 10;
+        }
+        
+        .google-custom-btn span {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
     </style>
 </head>
 
 <body>
     <!-- Main Container -->
-    <div class="w-full max-w-md p-6">
+    <div class="w-full max-w-md p-6 my-auto">
 
         <!-- Header / Logo Area -->
         <div class="text-center mb-8">
             <a href="index.html" class="inline-block mb-4 group">
                 <div
                     class="w-16 h-16 rounded-full border-2 border-yellow-500/30 flex items-center justify-center mx-auto overflow-hidden group-hover:border-yellow-500 transition-colors">
-                    <img src="./Nueva carpeta/Logo.png" alt="Trillos Logo" class="w-full h-full object-cover">
+                    <img src="./assets/Logo.png" alt="Trillos Logo" class="w-full h-full object-cover">
                 </div>
             </a>
             <h2 class="brand-title text-3xl font-bold mb-2">Trillos Records</h2>
@@ -283,7 +342,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label class="flex items-center text-gray-400 hover:text-white cursor-pointer">
                         <input type="checkbox" name="remember" class="mr-2 accent-yellow-500"> Recordarme
                     </label>
-                    <a href="#" class="text-yellow-500 hover:underline">¿Olvidaste tu contraseña?</a>
+                    <a href="forgot-password.php" class="text-yellow-500 hover:underline">¿Olvidaste tu contraseña?</a>
                 </div>
 
                 <button type="submit" class="gold-btn w-full py-3 rounded-lg text-lg">
@@ -303,9 +362,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i data-lucide="mail" class="input-icon w-5 h-5"></i>
                 </div>
                 <div class="input-group">
-                    <input type="password" name="password" placeholder="Contraseña" class="input-field" required>
+                    <input type="password" name="password" id="reg_password" placeholder="Contraseña" class="input-field" required>
                     <i data-lucide="lock" class="input-icon w-5 h-5"></i>
                 </div>
+                
+                <!-- Password Requirements (Minimalist) -->
+                <div class="mb-4 text-xs text-gray-500 space-y-1 pl-1 transition-all duration-300" id="password-reqs">
+                    <p class="font-medium mb-1 text-gray-400">La contraseña debe tener:</p>
+                    <div class="flex items-center space-x-2 req-item" id="req-lower">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Minúscula</span>
+                    </div>
+                    <div class="flex items-center space-x-2 req-item" id="req-upper">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Mayúscula</span>
+                    </div>
+                    <div class="flex items-center space-x-2 req-item" id="req-special">
+                        <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
+                        <span>Carácter especial (@$!%*?&)</span>
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <input type="password" name="confirm_password" placeholder="Confirmar Contraseña" class="input-field" required>
                     <i data-lucide="check-circle" class="input-icon w-5 h-5"></i>
@@ -320,6 +397,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         class="text-yellow-500">Privacidad</a>.
                 </p>
             </form>
+
+
+            <!-- Google Sign-In Section -->
+            <div class="mt-8">
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-700"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-3 bg-[#111111] text-gray-500 rounded-full border border-gray-800">O continúa con</span>
+                    </div>
+                </div>
+
+                <div id="g_id_onload"
+                    data-client_id="<?php echo htmlspecialchars(getenv('GOOGLE_CLIENT_ID')); ?>"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-callback="handleCredentialResponse"
+                    data-auto_prompt="false">
+                </div>
+
+                <div class="google-wrapper">
+                    <!-- The invisible Google button capturing clicks -->
+                    <div class="g_id_signin"
+                        data-type="standard"
+                        data-shape="rectangular"
+                        data-theme="filled_black"
+                        data-text="signin_with"
+                        data-size="large"
+                        data-logo_alignment="left"
+                        data-width="400">
+                    </div>
+                    
+                    <!-- The Custom Modern Button -->
+                    <button type="button" class="google-custom-btn w-full py-3 rounded-xl flex items-center justify-center space-x-3 transition-all">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span class="font-medium text-lg text-gray-800">Google</span>
+                    </button>
+                </div>
+            </div>
 
             <div class="mt-6 text-center">
                 <a href="index.php"
@@ -341,8 +463,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         lucide.createIcons();
+
+        function handleCredentialResponse(response) {
+            // Send the credential to your backend
+            fetch('google-callback.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ credential: response.credential })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'index.php';
+                } else {
+                    showMessage('Error al iniciar con Google: ' + data.message, 'error');
+                }
+            })
+            .catch(err => {
+                showMessage('Error de conexión', 'error');
+            });
+        }
 
         function switchTab(tab) {
             const loginForm = document.getElementById('login-form');
@@ -387,6 +533,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php if (!empty($message)): ?>
             showMessage("<?php echo addslashes($message); ?>", "<?php echo $msg_type; ?>");
         <?php endif; ?>
+
+        // Password Validation Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('reg_password');
+            const reqLower = document.getElementById('req-lower');
+            const reqUpper = document.getElementById('req-upper');
+            const reqSpecial = document.getElementById('req-special');
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    const val = this.value;
+                    
+                    // Check Lowercase
+                    if (/[a-z]/.test(val)) {
+                        setValid(reqLower);
+                    } else {
+                        setInvalid(reqLower);
+                    }
+
+                    // Check Uppercase
+                    if (/[A-Z]/.test(val)) {
+                        setValid(reqUpper);
+                    } else {
+                        setInvalid(reqUpper);
+                    }
+
+                    // Check Special
+                    if (/[^A-Za-z0-9]/.test(val)) {
+                        setValid(reqSpecial);
+                    } else {
+                        setInvalid(reqSpecial);
+                    }
+                });
+            }
+
+            function setValid(el) {
+                const dot = el.querySelector('div');
+                const text = el.querySelector('span');
+                dot.classList.remove('bg-gray-600');
+                dot.classList.add('bg-green-500', 'shadow-[0_0_5px_#22c55e]');
+                text.classList.add('text-green-400');
+                text.classList.remove('text-gray-500');
+            }
+
+            function setInvalid(el) {
+                const dot = el.querySelector('div');
+                const text = el.querySelector('span');
+                dot.classList.add('bg-gray-600');
+                dot.classList.remove('bg-green-500', 'shadow-[0_0_5px_#22c55e]');
+                text.classList.remove('text-green-400');
+                text.classList.add('text-gray-500');
+            }
+        });
     </script>
 </body>
 
