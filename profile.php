@@ -379,6 +379,7 @@ if (!isset($_SESSION['user_id'])) {
             
             api(fd).then(data => {
                 if (data.success) {
+                    window.isGoogleUser = !!data.user.google_id; // Store flag
                     document.getElementById('user-name').textContent = data.user.full_name;
                     const img = document.getElementById('profile-pic');
                     if (data.user.profile_pic) {
@@ -862,6 +863,15 @@ if (!isset($_SESSION['user_id'])) {
             document.getElementById('new-password').value = '';
             document.getElementById('confirm-password').value = '';
             
+            // Toggle Current Password visibility based on user type
+            const currentPwdContainer = document.getElementById('current-password').closest('div').parentElement;
+            if (window.isGoogleUser) {
+                currentPwdContainer.classList.add('hidden');
+            } else {
+                currentPwdContainer.classList.remove('hidden');
+            }
+            
+            
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
@@ -938,7 +948,13 @@ if (!isset($_SESSION['user_id'])) {
             const newPwd = document.getElementById('new-password').value;
             const confirmPwd = document.getElementById('confirm-password').value;
 
-            if (!currentPwd || !newPwd || !confirmPwd) {
+
+
+            // Validation: Require current password only if NOT google user logic (frontend check)
+            // But better, check if field is hidden.
+            const isHidden = document.getElementById('current-password').closest('div').parentElement.classList.contains('hidden');
+            
+            if ((!isHidden && !currentPwd) || !newPwd || !confirmPwd) {
                 alert('Por favor completa todos los campos');
                 return;
             }

@@ -26,7 +26,7 @@ try {
             $likes_count = $stmt->fetchColumn();
 
             // Get user info
-            $stmt = $pdo->prepare("SELECT full_name, profile_pic FROM users WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT full_name, profile_pic, google_id FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -334,8 +334,9 @@ try {
             $current_password = $_POST['current_password'] ?? '';
             $new_password = $_POST['new_password'] ?? '';
             
-            if (empty($current_password) || empty($new_password)) {
-                throw new Exception('Todos los campos son requeridos');
+            // Validate inputs
+            if (empty($new_password)) {
+                throw new Exception('La nueva contraseña es requerida');
             }
             
             // Validate new password complexity
@@ -343,18 +344,31 @@ try {
                 throw new Exception('La contraseña no cumple con los requisitos de seguridad');
             }
             
-            // Get current password hash
-            $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE id = ?");
+            // Get current password hash and google_id
+            $stmt = $pdo->prepare("SELECT password_hash, google_id FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$user) {
                 throw new Exception('Usuario no encontrado');
             }
+
+            // Verify current password ONLY if not a Google user (or if they provided it)
+            // If user has google_id and empty current_password, we skip check.
+            $isGoogleUser = !empty($user['google_id']);
             
-            // Verify current password
-            if (!password_verify($current_password, $user['password_hash'])) {
-                throw new Exception('La contraseña actual es incorrecta');
+            if (!$isGoogleUser) {
+                if (empty($current_password)) throw new Exception('La contraseña actual es requerida');
+                if (!password_verify($current_password, $user['password_hash'])) {
+                    throw new Exception('La contraseña actual es incorrecta');
+                }
+            } else {
+                // If is GoogleUser but provided a password, verify it just in case? 
+                // Plan says: "skip... if user only has Google login". 
+                // Let's allow skipping if they ARE a google user.
+                if (!empty($current_password) && !password_verify($current_password, $user['password_hash'])) {
+                     throw new Exception('La contraseña actual es incorrecta');
+                }
             }
             
             // Hash new password
