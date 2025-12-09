@@ -17,6 +17,19 @@ try {
 } catch (Exception $e) {
     $videos = [];
 }
+
+
+// Fetch user info if logged in
+$userProfilePic = null;
+if (isset($_SESSION['user_id'])) {
+    try {
+        $stmt = $pdo->prepare("SELECT profile_pic FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $userProfilePic = $stmt->fetchColumn();
+    } catch (Exception $e) {
+        // Ignore error
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -306,7 +319,9 @@ try {
             font-weight: 700;
             font-size: 0.9rem;
             border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            overflow: hidden; /* Ensure image stays within circle */
         }
 
         /* Ocultar texto en móviles muy pequeños */
@@ -384,9 +399,14 @@ try {
                     $initials = 'U';
                 }
             ?>
+
                 <div class="relative profile-menu-container">
                     <button onclick="toggleProfileMenu()" class="profile-avatar hover:scale-105 transition-transform" title="<?php echo htmlspecialchars($_SESSION['user_name']); ?>">
-                        <?php echo htmlspecialchars($initials); ?>
+                        <?php if ($userProfilePic): ?>
+                            <img src="<?php echo htmlspecialchars($userProfilePic); ?>" alt="Profile" class="w-full h-full object-cover">
+                        <?php else: ?>
+                            <?php echo htmlspecialchars($initials); ?>
+                        <?php endif; ?>
                     </button>
                     
                     <!-- Dropdown Menu -->
@@ -468,7 +488,8 @@ try {
                 <?php if (count($songs) > 0): ?>
                     <?php foreach ($songs as $song): ?>
                     <!-- Tarjeta Dinámica -->
-                    <div class="album-card group cursor-pointer" 
+                    <div class="album-card group cursor-pointer relative" 
+                        data-id="<?php echo $song['id']; ?>"
                         data-title="<?php echo htmlspecialchars($song['title']); ?>" 
                         data-artist="<?php echo htmlspecialchars($song['artist']); ?>"
                         data-audio-url="<?php echo htmlspecialchars($song['audio_path']); ?>"
@@ -481,6 +502,18 @@ try {
                                 <i data-lucide="play-circle" class="w-16 h-16 text-yellow-500 pulsing-play"></i>
                             </div>
                         </div>
+                        <!-- Share Button -->
+                        <button onclick="event.stopPropagation(); openShareModal('song', <?php echo $song['id']; ?>)" 
+                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Compartir">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                        </button>
+                        <!-- Like Button -->
+                        <button onclick="event.stopPropagation(); toggleLike('song', <?php echo $song['id']; ?>, this)" 
+                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 text-white hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Me Gusta">
+                            <i data-lucide="heart" class="w-4 h-4"></i>
+                        </button>
                         <div class="mt-4 text-center">
                             <p class="text-lg font-semibold text-white truncate"><?php echo htmlspecialchars($song['title']); ?></p>
                             <p class="text-sm text-gray-400"><?php echo htmlspecialchars($song['artist']); ?></p>
@@ -508,7 +541,9 @@ try {
                 <?php if (count($videos) > 0): ?>
                     <?php foreach ($videos as $video): ?>
                     <!-- Video Dinámico -->
-                    <div class="video-card cursor-pointer group" onclick="openVideoModal('<?php echo htmlspecialchars($video['video_path']); ?>')">
+                    <div class="video-card cursor-pointer group relative" 
+                        data-id="<?php echo $video['id']; ?>"
+                        onclick="openVideoModal('<?php echo htmlspecialchars($video['video_path']); ?>', <?php echo $video['id']; ?>)">
                         <div class="relative rounded-lg overflow-hidden shadow-2xl transition-all duration-500 transform group-hover:scale-[1.02] group-hover:shadow-yellow-900/50">
                             <!-- Thumbnail Local -->
                             <img src="<?php echo htmlspecialchars($video['cover_path']); ?>" alt="<?php echo htmlspecialchars($video['title']); ?>"
@@ -519,6 +554,18 @@ try {
                                     class="w-16 h-16 text-yellow-500 bg-black bg-opacity-70 p-3 rounded-full transition duration-300 group-hover:scale-110"></i>
                             </div>
                         </div>
+                        <!-- Share Button -->
+                        <button onclick="event.stopPropagation(); openShareModal('video', <?php echo $video['id']; ?>)" 
+                            class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Compartir">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                        </button>
+                        <!-- Like Button -->
+                        <button onclick="event.stopPropagation(); toggleLike('video', <?php echo $video['id']; ?>, this)" 
+                            class="absolute top-12 right-2 p-2 bg-black/60 hover:bg-red-500 text-white hover:text-white rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-10"
+                            title="Me Gusta">
+                            <i data-lucide="heart" class="w-4 h-4"></i>
+                        </button>
                         <p class="mt-3 text-lg font-semibold text-white text-center truncate"><?php echo htmlspecialchars($video['title']); ?></p>
                     </div>
                     <?php endforeach; ?>
@@ -645,7 +692,7 @@ try {
                 <i data-lucide="lock" class="w-10 h-10"></i>
              </div>
              
-            <h3 class="text-2xl font-bold text-yellow-500 mb-2 font-display">Acceso Requerido</h3>
+            <h3 id="modal-title" class="text-2xl font-bold text-yellow-500 mb-2 font-display">Acceso Requerido</h3>
             <p id="modal-text" class="text-gray-300 text-base leading-relaxed mb-6"></p>
             
             <div class="flex flex-col gap-3">
@@ -655,6 +702,60 @@ try {
                 <button onclick="closeMessageModal()"
                     class="w-full bg-transparent border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white font-medium py-3 px-6 rounded-xl transition-colors">
                     Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARE MODAL (Social & Copy) -->
+    <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[200] transition-opacity duration-300 opacity-0" onclick="closeShareModal()">
+        <div class="relative w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl transform transition-all scale-95 opacity-0" id="share-modal-content" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="share-2" class="w-5 h-5 text-yellow-500"></i> Compartir
+                </h3>
+                <button onclick="closeShareModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <!-- WhatsApp -->
+                <button onclick="shareSocial('whatsapp')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#25D366]/20 flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">WhatsApp</span>
+                </button>
+                <!-- Facebook -->
+                <button onclick="shareSocial('facebook')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#1877F2]/20 flex items-center justify-center text-[#1877F2] group-hover:bg-[#1877F2] group-hover:text-white transition-all">
+                        <i data-lucide="facebook" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Facebook</span>
+                </button>
+
+                <!-- Instagram -->
+                <button onclick="shareSocial('instagram')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-[#E1306C]/20 flex items-center justify-center text-[#E1306C] group-hover:bg-[#E1306C] group-hover:text-white transition-all">
+                        <i data-lucide="instagram" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Instagram</span>
+                </button>
+                <!-- Copy Link -->
+                <button onclick="shareSocial('copy')" class="flex flex-col items-center gap-2 group">
+                    <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-all">
+                        <i data-lucide="link" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-white">Copiar</span>
+                </button>
+            </div>
+
+            <!-- Input readonly with link -->
+            <div class="relative">
+                <input type="text" id="share-link-input" readonly class="w-full bg-black/50 border border-gray-800 text-gray-400 text-sm rounded-lg px-4 py-3 pr-12 focus:outline-none focus:border-yellow-500/50 transition-colors">
+                <button onclick="shareSocial('copy')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
@@ -694,8 +795,11 @@ try {
         // -------------------------
 
         // Función para mostrar mensajes personalizados (reemplaza alert())
-        function showMessage(text) {
+        function showMessage(text, title = 'Acceso Requerido') {
+            const modalTitle = document.getElementById('modal-title');
             const modalText = document.getElementById('modal-text');
+            
+            modalTitle.textContent = title;
             modalText.innerHTML = text; // Permitir HTML para formato
             
             const modal = document.getElementById('message-modal');
@@ -737,6 +841,10 @@ try {
                 togglePlayPause();
                 return;
             }
+
+            // Registrar Historial
+            const songId = card.dataset.id;
+            if (songId) addToHistory('song', songId);
 
             // Actualizar la interfaz del reproductor
             playerTitle.textContent = title;
@@ -900,11 +1008,14 @@ try {
         const videoIframeContainer = document.getElementById('video-iframe-container');
 
         // Abre el modal e inserta el video de YouTube
-        function openVideoModal(youtubeId) {
+        function openVideoModal(youtubeId, videoId) {
             if (!isLoggedIn) {
                 showMessage('Debes iniciar sesión o registrarte para ver videos.');
                 return;
             }
+
+            // Registrar Historial
+            if (videoId) addToHistory('video', videoId);
 
             // Pausar audio al abrir el video
             if (isPlaying) {
@@ -924,6 +1035,13 @@ try {
             // Mostrar modal con transición
             videoModal.classList.remove('hidden');
             setTimeout(() => videoModal.classList.add('opacity-100'), 10);
+            
+            // Registrar Historial (encontrar ID primero)
+            // Nota: openVideoModal recibía path, no ID. Necesitamos cambiar onclick en HTML para pasar ID también o buscarlo.
+            // Solución rápida: Modificar openVideoModal para aceptar ID también.
+            // Pero openVideoModal se llama con path. 
+            // Vamos a buscar el ID desde el elemento que disparó el evento? No tengo referencia fácil aquí.
+            // Mejor: Pasamos el ID al llamar openVideoModal(path, id).
         }
 
         // Cierra el modal y detiene la reproducción del video
@@ -1021,6 +1139,179 @@ try {
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
+        }
+
+        // -------------------------
+        // DEEP LINKING & SHARING
+        // -------------------------
+        // -------------------------
+        // SOCIAL SHARE MODAL LOGIC
+        // -------------------------
+        let currentShareLink = '';
+
+        function openShareModal(type, id) {
+            if (!isLoggedIn) {
+                showMessage('Debes iniciar sesión para compartir música y videos con tus amigos.', 'Acceso Requerido');
+                return;
+            }
+
+            const baseUrl = window.location.href.split('?')[0];
+            currentShareLink = `${baseUrl}?${type}=${id}`;
+            
+            // Set link in input
+            document.getElementById('share-link-input').value = currentShareLink;
+            
+            const modal = document.getElementById('share-modal');
+            const content = document.getElementById('share-modal-content');
+            
+            modal.classList.remove('hidden');
+            // Animate in
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('share-modal');
+            const content = document.getElementById('share-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function shareSocial(platform) {
+            if (!currentShareLink) return;
+            
+            let shareUrl = '';
+            const title = "Mira esto en Trillos Visual Records";
+
+            switch (platform) {
+                case 'whatsapp':
+                    shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + currentShareLink)}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentShareLink)}`;
+                    break;
+
+                case 'instagram':
+                    // Instagram doesn't support direct web sharing via URL params.
+                    // We copy the link and open Instagram for the user to paste.
+                    navigator.clipboard.writeText(currentShareLink).then(() => {
+                        window.open('https://www.instagram.com/', '_blank');
+                        // Optional: Show toast hint
+                        const btn = document.querySelector('button[onclick="shareSocial(\'instagram\')"]');
+                        if(btn) {
+                            const originalHtml = btn.innerHTML;
+                             btn.innerHTML = `<div class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-500"><i data-lucide="check" class="w-6 h-6"></i></div><span class="text-xs text-white">¡Link Copiado!</span>`;
+                            lucide.createIcons();
+                            setTimeout(() => {
+                                btn.innerHTML = originalHtml;
+                                lucide.createIcons();
+                            }, 2000);
+                        }
+                    });
+                    return; 
+                case 'copy':
+                    navigator.clipboard.writeText(currentShareLink).then(() => {
+                        // Show raw message to avoid recursive modal opening or confusion
+                        const btn = document.querySelector('button[onclick="shareSocial(\'copy\')"]');
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = `<div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500"><i data-lucide="check" class="w-6 h-6"></i></div><span class="text-xs text-white">¡Copiado!</span>`;
+                        lucide.createIcons();
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            lucide.createIcons();
+                        }, 2000);
+                    });
+                    return;
+            }
+
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        }
+
+        // Handle URL params on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('song')) {
+                const songId = urlParams.get('song');
+                const card = document.querySelector(`.album-card[data-id="${songId}"]`);
+                if (card) {
+                    // Scroll to music section
+                    document.getElementById('music').scrollIntoView({ behavior: 'smooth' });
+                    // Give a moment for scroll then play
+                    setTimeout(() => loadAndPlayTrack(card), 800);
+                }
+            } else if (urlParams.has('video')) {
+                const videoId = urlParams.get('video');
+                const card = document.querySelector(`.video-card[data-id="${videoId}"]`);
+                if (card) {
+                    document.getElementById('videos').scrollIntoView({ behavior: 'smooth' });
+                    // Simulate click to open modal
+                    setTimeout(() => card.click(), 800);
+                }
+            }
+        });
+        // -------------------------
+        // PROFILE INTEGRATION (LIKES & HISTORY)
+        // -------------------------
+        async function toggleLike(type, id, btn) {
+            if (!isLoggedIn) {
+                showMessage('Debes iniciar sesión para dar "Me Gusta".', 'Acceso Requerido');
+                return;
+            }
+            
+            const fd = new FormData();
+            fd.append('action', 'toggle_like');
+            fd.append('type', type);
+            fd.append('item_id', id);
+
+            try {
+                const response = await fetch('api_profile.php', { method: 'POST', body: fd });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const icon = btn.querySelector('i');
+                    if (data.liked) {
+                        btn.classList.add('bg-red-500', 'text-white');
+                        btn.classList.remove('hover:bg-red-500'); // already red
+                        icon.setAttribute('fill', 'currentColor');
+                        showMessage('¡Añadido a tus Me Gusta!', 'Favoritos');
+                    } else {
+                        btn.classList.remove('bg-red-500', 'text-white');
+                        btn.classList.add('hover:bg-red-500');
+                        icon.setAttribute('fill', 'none');
+                        showMessage('Eliminado de tus Me Gusta.', 'Favoritos');
+                    }
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function addToHistory(type, id) {
+            if (!isLoggedIn) return;
+            
+            const fd = new FormData();
+            fd.append('action', 'add_history');
+            fd.append('type', type);
+            fd.append('item_id', id);
+            
+            try {
+                fetch('api_profile.php', { method: 'POST', body: fd });
+            } catch (e) {
+                console.error('History error', e);
+            }
         }
     </script>
 </body>
