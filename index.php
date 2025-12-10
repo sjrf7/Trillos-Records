@@ -576,12 +576,12 @@ if (isset($_SESSION['user_id'])) {
             </h2>
 
             <!-- Grid de Videos de YouTube (miniaturas) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
 
                 <?php if (count($videos) > 0): ?>
                     <?php foreach ($videos as $video): ?>
                     <!-- Video Dinámico -->
-                    <div class="video-card cursor-pointer group relative" 
+                    <div class="video-card cursor-pointer group relative w-full" 
                         data-id="<?php echo $video['id']; ?>"
                         onclick="openVideoModal('<?php echo htmlspecialchars($video['video_path']); ?>', <?php echo $video['id']; ?>)">
                         <div class="relative rounded-lg overflow-hidden shadow-2xl transition-all duration-500 transform group-hover:scale-[1.02] group-hover:shadow-yellow-900/50">
