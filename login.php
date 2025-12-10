@@ -320,7 +320,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Header / Logo Area -->
         <div class="text-center mb-8">
-            <a href="index.html" class="inline-block mb-4 group">
+            <a href="index.php" class="inline-block mb-4 group">
                 <div
                     class="w-16 h-16 rounded-full border-2 border-yellow-500/30 flex items-center justify-center mx-auto overflow-hidden group-hover:border-yellow-500 transition-colors">
                     <img src="./assets/Logo.png" alt="Trillos Logo" class="w-full h-full object-cover">
