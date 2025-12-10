@@ -11,6 +11,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $message = '';
 $error = '';
 
+// Check for AJAX/Fetch (Send JSON)
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+function jsonResponse($success, $msg) {
+    global $isAjax;
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'message' => $msg]);
+        exit();
+    }
+}
+
+
+
 // Handle Song Upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_song') {
     $title = trim($_POST['title']);
@@ -35,14 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmt = $pdo->prepare("INSERT INTO songs (title, artist, cover_path, audio_path) VALUES (?, ?, ?, ?)");
             if ($stmt->execute([$title, $artist, $coverPath, $audioPath])) {
                 $message = "Canción subida exitosamente.";
+                jsonResponse(true, $message);
             } else {
                 $error = "Error al guardar en base de datos.";
+                jsonResponse(false, $error);
             }
         } else {
             $error = "Error al mover archivos al servidor.";
+            jsonResponse(false, $error);
         }
     } else {
         $error = "Error en la subida de archivos.";
+        jsonResponse(false, $error);
     }
 }
 
@@ -69,14 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmt = $pdo->prepare("INSERT INTO videos (title, video_path, cover_path) VALUES (?, ?, ?)");
             if ($stmt->execute([$title, $videoPath, $coverPath])) {
                 $message = "Video subido exitosamente.";
+                jsonResponse(true, $message);
             } else {
                 $error = "Error al guardar en la base de datos.";
+                jsonResponse(false, $error);
             }
         } else {
             $error = "Error al mover los archivos al servidor.";
+            jsonResponse(false, $error);
         }
     } else {
         $error = "Error: Debes subir un video y una miniatura.";
+        jsonResponse(false, $error);
     }
 }
 
@@ -333,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     </style>
 </head>
 
-<body class="bg-black text-gray-200 min-h-screen flex overflow-hidden">
+<body class="bg-black text-gray-200 min-h-screen flex md:overflow-hidden">
 
     <!-- Sidebar -->
     <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-20 hidden md:flex">
@@ -370,7 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 relative overflow-y-auto">
+    <main class="flex-1 relative md:overflow-y-auto">
         <!-- Header Mobile -->
         <div class="md:hidden p-4 glass-panel flex justify-between items-center sticky top-0 z-30">
             <div class="flex items-center gap-2">
@@ -684,6 +706,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
     </div>
 
+        </div>
+    </div>
+
+    <!-- Circular Progress Banner -->
+    <div id="upload-progress-banner" class="fixed bottom-0 left-0 w-full z-50 bg-[#111] border-t border-yellow-500/30 p-4 transform translate-y-full transition-transform duration-300 shadow-[0_-5px_30px_rgba(0,0,0,0.8)]">
+        <div id="banner-inner" class="max-w-4xl mx-auto flex items-center justify-between transition-all duration-300">
+            
+            <!-- Left: Icon & Text -->
+            <div class="flex items-center gap-6">
+                <!-- Circular Progress Ring -->
+                <div class="relative w-14 h-14 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="28" cy="28" r="24" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-800" />
+                        <circle id="progress-ring" cx="28" cy="28" r="24" stroke="currentColor" stroke-width="4" fill="transparent" class="text-yellow-500 transition-all duration-300 ease-out" stroke-dasharray="150.72" stroke-dashoffset="150.72" />
+                    </svg>
+                    <!-- Check Icon (Hidden by default) -->
+                    <div id="success-checkmark" class="absolute inset-0 flex items-center justify-center opacity-0 scale-50 transition-all duration-300 text-green-500">
+                        <i data-lucide="check" class="w-8 h-8"></i>
+                    </div>
+                     <!-- Percentage Text -->
+                    <span id="progress-text" class="absolute text-[10px] font-bold text-white">0%</span>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold text-lg" id="progress-title">Subiendo archivos...</h4>
+                    <p class="text-sm text-gray-400" id="progress-detail">Por favor espera</p>
+                </div>
+            </div>
+
+            <!-- Right: Action Button -->
+             <a href="index.php" id="upload-back-btn" class="hidden opacity-0 transform translate-x-4 transition-all duration-500 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium flex items-center gap-2 group">
+                <span>Volver al Sitio</span>
+                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+
+        </div>
+    </div>
+
     <!-- Edit Video Modal -->
     <div id="edit-video-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="edit-video-backdrop"></div>
@@ -800,6 +860,241 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     <script>
         lucide.createIcons();
+        
+         // ------------------------------
+        // UPLOAD PROGRESS LOGIC (CIRCULAR)
+        // ------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+             const uploadForms = document.querySelectorAll('#view-upload form');
+             
+             uploadForms.forEach(form => {
+                 form.addEventListener('submit', function(e) {
+                     e.preventDefault();
+                     handleUpload(this);
+                 });
+             });
+        });
+
+        function handleUpload(form) {
+            const banner = document.getElementById('upload-progress-banner');
+            const ring = document.getElementById('progress-ring');
+            const percentText = document.getElementById('progress-text');
+            const titleEl = document.getElementById('progress-title');
+            const detailEl = document.getElementById('progress-detail');
+            const backBtn = document.getElementById('upload-back-btn');
+            const checkmark = document.getElementById('success-checkmark');
+            const bannerInner = document.getElementById('banner-inner');
+
+            // Circle properties (r=24 -> circumference ~ 150.72)
+            const circumference = 2 * Math.PI * 24;
+            ring.style.strokeDasharray = `${circumference} ${circumference}`;
+            ring.style.strokeDashoffset = circumference;
+
+            // Reset UI
+            banner.classList.remove('translate-y-full', 'bg-green-900/40', 'border-green-500/50');
+            backBtn.classList.add('hidden', 'opacity-0');
+            checkmark.classList.add('opacity-0', 'scale-50');
+            percentText.classList.remove('opacity-0'); // Show percent text
+            ring.classList.remove('text-green-500');
+            ring.classList.add('text-yellow-500');
+            
+            titleEl.textContent = "Subiendo archivos...";
+            detailEl.textContent = "Por favor espera";
+            
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', 'admin.php', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            // Progress
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = e.loaded / e.total;
+                    const offset = circumference - (percent * circumference);
+                    
+                    ring.style.strokeDashoffset = offset;
+                    percentText.textContent = Math.round(percent * 100) + '%';
+                    
+                    if(percent < 1) {
+                         titleEl.textContent = "Subiendo...";
+                    } else {
+                         titleEl.textContent = "Procesando...";
+                    }
+                }
+            };
+
+            // Complete
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if(res.success) {
+                            // 100% Progress
+                            ring.style.strokeDashoffset = 0;
+                            percentText.textContent = ''; // Hide text
+                            
+                            // Success transformation
+                            titleEl.textContent = "¡Subida Exitosa!";
+                            detailEl.textContent = "Proceso completado";
+                            
+                            banner.classList.add('bg-green-900/40', 'border-green-500/50');
+                            ring.classList.remove('text-yellow-500');
+                            ring.classList.add('text-green-500');
+                            
+                            // Show Checkmark
+                            percentText.classList.add('opacity-0');
+                            checkmark.classList.remove('opacity-0', 'scale-50');
+                            
+                            // Show Button
+                            backBtn.classList.remove('hidden');
+                            setTimeout(() =>backBtn.classList.remove('opacity-0', 'translate-x-4'), 50);
+
+                            // Auto Hide
+                            setTimeout(() => {
+                                banner.classList.add('translate-y-full');
+                            }, 3000);
+                            
+                        } else {
+                            alert('Error: ' + res.message);
+                            banner.classList.add('translate-y-full');
+                        }
+                    } catch (e) {
+                         console.error(e);
+                         banner.classList.add('translate-y-full');
+                         // Fallback reload if valid response is messed up but maybe uploaded
+                         if(xhr.responseText.includes('success')) location.reload();
+                    }
+                } else {
+                     alert('Error de conexión.');
+                     banner.classList.add('translate-y-full');
+                }
+            };
+             
+            xhr.onerror = function() {
+                 alert('Error de red.');
+                 banner.classList.add('translate-y-full');
+            };
+
+            xhr.send(formData);
+        }
+        
+         // ------------------------------
+        // UPLOAD PROGRESS LOGIC (CIRCULAR)
+        // ------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+             const uploadForms = document.querySelectorAll('#view-upload form');
+             
+             uploadForms.forEach(form => {
+                 form.addEventListener('submit', function(e) {
+                     e.preventDefault();
+                     handleUpload(this);
+                 });
+             });
+        });
+
+        function handleUpload(form) {
+            const banner = document.getElementById('upload-progress-banner');
+            const ring = document.getElementById('progress-ring');
+            const percentText = document.getElementById('progress-text');
+            const titleEl = document.getElementById('progress-title');
+            const detailEl = document.getElementById('progress-detail');
+            const backBtn = document.getElementById('upload-back-btn');
+            const checkmark = document.getElementById('success-checkmark');
+            const bannerInner = document.getElementById('banner-inner');
+
+            // Circle properties (r=24 -> circumference ~ 150.72)
+            const circumference = 2 * Math.PI * 24;
+            ring.style.strokeDasharray = `${circumference} ${circumference}`;
+            ring.style.strokeDashoffset = circumference;
+
+            // Reset UI
+            banner.classList.remove('translate-y-full', 'bg-green-900/40', 'border-green-500/50');
+            backBtn.classList.add('hidden', 'opacity-0');
+            checkmark.classList.add('opacity-0', 'scale-50');
+            percentText.classList.remove('opacity-0'); // Show percent text
+            ring.classList.remove('text-green-500');
+            ring.classList.add('text-yellow-500');
+            
+            titleEl.textContent = "Subiendo archivos...";
+            detailEl.textContent = "Por favor espera";
+            
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', 'admin.php', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            // Progress
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = e.loaded / e.total;
+                    const offset = circumference - (percent * circumference);
+                    
+                    ring.style.strokeDashoffset = offset;
+                    percentText.textContent = Math.round(percent * 100) + '%';
+                    
+                    if(percent < 1) {
+                         titleEl.textContent = "Subiendo...";
+                    } else {
+                         titleEl.textContent = "Procesando...";
+                    }
+                }
+            };
+
+            // Complete
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if(res.success) {
+                            // 100% Progress
+                            ring.style.strokeDashoffset = 0;
+                            percentText.textContent = ''; // Hide text
+                            
+                            // Success transformation
+                            titleEl.textContent = "¡Subida Exitosa!";
+                            detailEl.textContent = "Proceso completado";
+                            
+                            banner.classList.add('bg-green-900/40', 'border-green-500/50');
+                            ring.classList.remove('text-yellow-500');
+                            ring.classList.add('text-green-500');
+                            
+                            // Show Checkmark
+                            percentText.classList.add('opacity-0');
+                            checkmark.classList.remove('opacity-0', 'scale-50');
+                            
+                            // Show Button
+                            backBtn.classList.remove('hidden');
+                            setTimeout(() =>backBtn.classList.remove('opacity-0', 'translate-x-4'), 50);
+
+                            // Auto Hide
+                            setTimeout(() => {
+                                banner.classList.add('translate-y-full');
+                            }, 3000);
+                            
+                        } else {
+                            alert('Error: ' + res.message);
+                            banner.classList.add('translate-y-full');
+                        }
+                    } catch (e) {
+                         console.error(e);
+                         alert('Error del servidor.');
+                         banner.classList.add('translate-y-full');
+                    }
+                } else {
+                     alert('Error de conexión.');
+                     banner.classList.add('translate-y-full');
+                }
+            };
+             
+            xhr.onerror = function() {
+                 alert('Error de red.');
+                 banner.classList.add('translate-y-full');
+            };
+
+            xhr.send(formData);
+        }
         
         // Initial Tab State
         document.addEventListener('DOMContentLoaded', () => {

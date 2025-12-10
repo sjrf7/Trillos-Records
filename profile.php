@@ -309,9 +309,39 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
+
+    <!-- Toast Notification -->
+    <div id="toast-container" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[4000] pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div class="bg-black/80 backdrop-blur-xl border border-green-500/30 rounded-full px-6 py-3 shadow-2xl flex items-center gap-3">
+             <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 relative">
+                 <i data-lucide="check" class="w-5 h-5 absolute z-10"></i>
+                 <div class="absolute w-full h-full bg-green-500/30 rounded-full animate-ping opacity-75"></div>
+             </div>
+             <div>
+                 <p class="text-white font-bold text-sm" id="toast-message">Canción Añadida</p>
+             </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script>
         lucide.createIcons();
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-container');
+            const msgEl = document.getElementById('toast-message');
+            if(toast && msgEl) {
+                msgEl.textContent = message;
+                toast.classList.remove('translate-y-4', 'opacity-0');
+                
+                // Animación de entrada
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    toast.classList.add('translate-y-4', 'opacity-0');
+                }, 3000);
+            }
+        }
 
         function togglePassword(inputId, toggleIcon) {
             const input = document.getElementById(inputId);
@@ -324,6 +354,7 @@ if (!isset($_SESSION['user_id'])) {
             }
             lucide.createIcons();
         }
+
 
         // Load Initial Data
         document.addEventListener('DOMContentLoaded', () => {
@@ -834,8 +865,8 @@ if (!isset($_SESSION['user_id'])) {
             if(res.success) {
                 // Refresh playlist items
                 loadPlaylistItems(currentPlaylistId);
-                // Maybe close modal or show checkmark? Let's keep open to add more.
-                alert('Canción añadida'); // Temporary feedback, could be better toast
+                // Notification
+                showToast('Canción añadida');
             } else {
                 alert(res.message);
             }

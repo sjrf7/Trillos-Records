@@ -1058,8 +1058,81 @@ if (isset($_SESSION['user_id'])) {
             });
         }
         
-        if(document.getElementById('prev-btn')) document.getElementById('prev-btn').addEventListener('click', () => {/* Logic for prev */});
-        if(document.getElementById('next-btn')) document.getElementById('next-btn').addEventListener('click', () => {/* Logic for next */});
+        function playNextTrack() {
+            if (allSongs.length === 0) return;
+            
+            // Si no hay canción sonando o no se encuentra, poner la primera
+            if (!currentTrack) {
+                const song = allSongs[0];
+                loadAndPlayTrack({
+                    dataset: {
+                        title: song.title,
+                        artist: song.artist,
+                        audioUrl: song.audio_path,
+                        cover: song.cover_path,
+                        id: song.id
+                    },
+                    getAttribute: () => song.audio_path
+                });
+                return;
+            }
+
+            const currentIndex = allSongs.findIndex(song => song.audio_path === currentTrack);
+            let nextIndex = (currentIndex + 1) % allSongs.length;
+            
+            const nextSong = allSongs[nextIndex];
+            loadAndPlayTrack({
+                dataset: {
+                    title: nextSong.title,
+                    artist: nextSong.artist,
+                    audioUrl: nextSong.audio_path,
+                    cover: nextSong.cover_path,
+                    id: nextSong.id
+                },
+                getAttribute: () => nextSong.audio_path
+            });
+        }
+
+        function playPrevTrack() {
+             if (allSongs.length === 0) return;
+
+            // Si no hay canción sonando, poner la última
+            if (!currentTrack) {
+                const song = allSongs[allSongs.length - 1];
+                loadAndPlayTrack({
+                    dataset: {
+                        title: song.title,
+                        artist: song.artist,
+                        audioUrl: song.audio_path,
+                        cover: song.cover_path,
+                        id: song.id
+                    },
+                    getAttribute: () => song.audio_path
+                });
+                return;
+            }
+
+            const currentIndex = allSongs.findIndex(song => song.audio_path === currentTrack);
+            let prevIndex = (currentIndex - 1 + allSongs.length) % allSongs.length;
+            
+            const prevSong = allSongs[prevIndex];
+            loadAndPlayTrack({
+                dataset: {
+                    title: prevSong.title,
+                    artist: prevSong.artist,
+                    audioUrl: prevSong.audio_path,
+                    cover: prevSong.cover_path,
+                     id: prevSong.id
+                },
+                 getAttribute: () => prevSong.audio_path
+            });
+        }
+
+        if(document.getElementById('prev-btn')) document.getElementById('prev-btn').addEventListener('click', playPrevTrack);
+        if(document.getElementById('next-btn')) document.getElementById('next-btn').addEventListener('click', playNextTrack);
+        
+        // Auto-play next track when current one ends gets added to ensure flow
+        audio.addEventListener('ended', playNextTrack);
         if(playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
         
         albumCards.forEach(card => card.addEventListener('click', () => loadAndPlayTrack(card)));
@@ -1227,6 +1300,13 @@ if (isset($_SESSION['user_id'])) {
         }
         
         function openVideoModal(path, id) {
+             // Pausar música si está sonando
+             if (!audio.paused) {
+                 audio.pause();
+                 updatePlayPauseIcon('play');
+                 isPlaying = false;
+             }
+
              if(id) addToHistory('video', id);
              const modal = document.getElementById('video-modal');
              const player = document.getElementById('video-player');
