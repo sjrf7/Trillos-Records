@@ -358,29 +358,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <body class="bg-black text-gray-200 min-h-screen flex md:overflow-hidden">
 
     <!-- Barra lateral -->
-    <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-20 hidden md:flex">
-        <div class="p-8">
+    <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-50 hidden md:flex fixed inset-y-0 left-0 bg-black/95 md:bg-transparent md:static transition-transform duration-300">
+        <!-- Botón cerrar móvil (Absoluto) -->
+        <button onclick="document.querySelector('aside').classList.add('hidden')" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2 z-50 bg-black/50 rounded-full">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="p-8 pb-4">
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-                <img src="./assets/Logo.png" alt="Trillos Records" class="h-12 w-auto object-contain">
-                <span>Trillos<span class="text-yellow-500">Admin</span></span>
+                <img src="./assets/Logo.png" alt="Trillos Records" class="h-10 w-auto object-contain">
+                <span class="text-xl">Trillos<span class="text-yellow-500">Admin</span></span>
             </h1>
         </div>
 
         <nav class="flex-1 px-4 space-y-2">
             <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Principal</p>
-            <button onclick="switchTab('upload')" id="nav-upload" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 <?php echo $activeTab === 'upload' ? 'active' : ''; ?>">
+            <button onclick="switchTab('upload'); if(window.innerWidth < 768) document.querySelector('aside').classList.add('hidden');" id="nav-upload" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 <?php echo $activeTab === 'upload' ? 'active' : ''; ?>">
                 <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                 Subir Contenido
             </button>
-            <button onclick="switchTab('library')" id="nav-library" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 <?php echo $activeTab === 'library' ? 'active' : ''; ?>">
+            <button onclick="switchTab('library'); if(window.innerWidth < 768) document.querySelector('aside').classList.add('hidden');" id="nav-library" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 <?php echo $activeTab === 'library' ? 'active' : ''; ?>">
                 <i data-lucide="library" class="w-5 h-5"></i>
                 Biblioteca Musical
             </button>
-            <button onclick="switchTab('stats')" id="nav-stats" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
+            <button onclick="switchTab('stats'); if(window.innerWidth < 768) document.querySelector('aside').classList.add('hidden');" id="nav-stats" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                 Estadísticas
             </button>
-            <button onclick="switchTab('video-library')" id="nav-video-library" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
+            <button onclick="switchTab('video-library'); if(window.innerWidth < 768) document.querySelector('aside').classList.add('hidden');" id="nav-video-library" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
                 <i data-lucide="video" class="w-5 h-5"></i>
                 Biblioteca de Videos
             </button>
@@ -403,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                  <a href="index.php" class="text-gray-400 hover:text-white" title="Volver al Sitio">
                     <i data-lucide="home" class="w-6 h-6"></i>
                 </a>
-                <button onclick="document.querySelector('aside').classList.toggle('hidden')" class="p-2 text-gray-300">
+                <button onclick="document.querySelector('aside').classList.remove('hidden')" class="p-2 text-gray-300">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
@@ -979,19 +984,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             xhr.send(formData);
         }
         
-         // ------------------------------
-        // UPLOAD PROGRESS LOGIC (CIRCULAR)
-        // ------------------------------
-        document.addEventListener('DOMContentLoaded', () => {
-             const uploadForms = document.querySelectorAll('#view-upload form');
-             
-             uploadForms.forEach(form => {
-                 form.addEventListener('submit', function(e) {
-                     e.preventDefault();
-                     handleUpload(this);
-                 });
-             });
-        });
+
 
         function handleUpload(form) {
             const banner = document.getElementById('upload-progress-banner');
