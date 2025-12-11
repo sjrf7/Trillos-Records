@@ -15,25 +15,25 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 try {
     switch ($action) {
         case 'get_stats':
-            // Count playlists
+            // Contar listas de reproducción
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM playlists WHERE user_id = ?");
             $stmt->execute([$user_id]);
             $playlists_count = $stmt->fetchColumn();
 
-            // Count likes (songs + videos)
+            // Contar 'Me gusta' (canciones + videos)
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM likes WHERE user_id = ?");
             $stmt->execute([$user_id]);
             $likes_count = $stmt->fetchColumn();
 
-            // Get user info
+            // Obtener información del usuario
             $stmt = $pdo->prepare("SELECT full_name, profile_pic, google_id FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Validate profile_pic
+            // Validar foto de perfil
             if ($user && $user['profile_pic']) {
                 $pic = $user['profile_pic'];
-                // Check if it's a URL or a valid local file
+                // Verificar si es una URL o un archivo local válido
                 if (!filter_var($pic, FILTER_VALIDATE_URL) && !file_exists($pic)) {
                     $user['profile_pic'] = null;
                 }
@@ -55,7 +55,7 @@ try {
             $full_name = trim($_POST['full_name'] ?? '');
             if (empty($full_name)) throw new Exception('El nombre no puede estar vacío');
 
-            // Handle Profile Pic Upload
+            // Manejar subida de foto de perfil
             $profile_pic_path = null;
             if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = 'uploads/profiles/';
@@ -74,7 +74,7 @@ try {
                 }
             }
 
-            // Update Query
+            // Consulta de actualización
             if ($profile_pic_path) {
                 $stmt = $pdo->prepare("UPDATE users SET full_name = ?, profile_pic = ? WHERE id = ?");
                 $stmt->execute([$full_name, $profile_pic_path, $user_id]);
@@ -99,16 +99,16 @@ try {
         case 'delete_playlist':
             $playlist_id = $_POST['playlist_id'] ?? 0;
             
-            // Verify ownership
+            // Verificar propiedad
             $stmt = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
             $stmt->execute([$playlist_id, $user_id]);
             if (!$stmt->fetch()) throw new Exception('Lista no encontrada o permiso denegado');
             
-            // Delete items first (safe approach)
+            // Eliminar elementos primero (enfoque seguro)
             $stmt = $pdo->prepare("DELETE FROM playlist_items WHERE playlist_id = ?");
             $stmt->execute([$playlist_id]);
             
-            // Delete playlist
+            // Eliminar lista de reproducción
             $stmt = $pdo->prepare("DELETE FROM playlists WHERE id = ?");
             $stmt->execute([$playlist_id]);
             
@@ -121,15 +121,15 @@ try {
             
             if (empty($name)) throw new Exception('El nombre no puede estar vacío');
             
-            // Verify ownership and update
+            // Verificar propiedad y actualizar
             $stmt = $pdo->prepare("UPDATE playlists SET name = ? WHERE id = ? AND user_id = ?");
             $result = $stmt->execute([$name, $playlist_id, $user_id]);
             
             if ($stmt->rowCount() === 0) {
-                 // Check if it was because ID/User mismatch or just same name
-                 // But for UI feedback, success is fine if it exists. 
-                 // Let's strict check ownership if needed, but rowCount 0 is fine if name unchanged.
-                 // Ideally verify ownership first to distinguish.
+                 // Verificar si fue por discrepancia de ID/Usuario o simplemente el mismo nombre
+                 // Pero para retroalimentación de UI, éxito está bien si existe.
+                 // Verifiquemos propiedad estrictamente si es necesario, pero rowCount 0 está bien si el nombre no cambia.
+                 // Idealmente verificar propiedad primero para distinguir.
                  $check = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
                  $check->execute([$playlist_id, $user_id]);
                  if (!$check->fetch()) throw new Exception('Lista no encontrada o permiso denegado');
@@ -139,22 +139,22 @@ try {
             break;
 
         case 'toggle_like':
-            $type = $_POST['type'] ?? ''; // 'song' or 'video'
+            $type = $_POST['type'] ?? ''; // 'cancion' o 'video'
             $item_id = $_POST['item_id'] ?? 0;
             
             if (!in_array($type, ['song', 'video'])) throw new Exception('Tipo inválido');
             
-            // Check if already liked
+            // Verificar si ya se dio 'Me gusta'
             $stmt = $pdo->prepare("SELECT id FROM likes WHERE user_id = ? AND type = ? AND item_id = ?");
             $stmt->execute([$user_id, $type, $item_id]);
             $existing = $stmt->fetch();
             
             if ($existing) {
-                // Unlike
+                // Quitar 'Me gusta'
                 $pdo->prepare("DELETE FROM likes WHERE id = ?")->execute([$existing['id']]);
                 echo json_encode(['success' => true, 'liked' => false]);
             } else {
-                // Like
+                // Dar 'Me gusta'
                 $stmt = $pdo->prepare("INSERT INTO likes (user_id, type, item_id) VALUES (?, ?, ?)");
                 $stmt->execute([$user_id, $type, $item_id]);
                 echo json_encode(['success' => true, 'liked' => true]);
@@ -167,7 +167,7 @@ try {
             
             if (!in_array($type, ['song', 'video'])) throw new Exception('Tipo inválido');
 
-            // Optional: Limit history size per user? Or just insert.
+            // Opcional: ¿Limitar tamaño del historial por usuario? O simplemente insertar.
             $stmt = $pdo->prepare("INSERT INTO history (user_id, type, item_id, played_at) VALUES (?, ?, ?, NOW())");
             $stmt->execute([$user_id, $type, $item_id]);
             
@@ -175,7 +175,7 @@ try {
             break;
 
         case 'get_likes':
-             // Fetch liked songs
+             // Obtener canciones que gustan
              $stmt = $pdo->prepare("
                 SELECT s.*, 'song' as type 
                 FROM likes l 
@@ -186,7 +186,7 @@ try {
             $stmt->execute([$user_id]);
             $liked_songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Fetch liked videos
+            // Obtener videos que gustan
             $stmt = $pdo->prepare("
                 SELECT v.*, 'video' as type 
                 FROM likes l 
@@ -201,11 +201,11 @@ try {
             break;
             
         case 'get_history':
-            // Fetch history with item details
-            // Complex query or two queries. Let's do two for simplicity and join manually or just return raw and fetch details.
-            // Better: Union or just separate lists. Let's return mixed list ordered by date.
+            // Obtener historial con detalles de elementos
+            // Consulta compleja o dos consultas. Hagamos dos por simplicidad y unamos manualmente o simplemente devolvamos crudo y obtengamos detalles.
+            // Mejor: Unión o listas separadas. Devolvamos lista mixta ordenada por fecha.
             
-            // Songs history
+            // Historial de canciones
             $stmt = $pdo->prepare("
                 SELECT h.played_at, s.*, 'song' as item_type
                 FROM history h
@@ -216,7 +216,7 @@ try {
             $stmt->execute([$user_id]);
             $level1 = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Videos history
+            // Historial de videos
             $stmt = $pdo->prepare("
                 SELECT h.played_at, v.*, 'video' as item_type
                 FROM history h
@@ -229,12 +229,12 @@ try {
             
             $history = array_merge($level1, $level2);
             
-            // Sort by played_at desc
+            // Ordenar por played_at descendente
             usort($history, function($a, $b) {
                 return strtotime($b['played_at']) - strtotime($a['played_at']);
             });
 
-            echo json_encode(['success' => true, 'history' => array_slice($history, 0, 10)]); // Limit to 10
+            echo json_encode(['success' => true, 'history' => array_slice($history, 0, 10)]); // Limitar a 10
             break;
             
         case 'get_playlists':
@@ -247,14 +247,14 @@ try {
         case 'get_playlist_details':
             $playlist_id = $_POST['playlist_id'] ?? 0;
             
-            // Get playlist info
+            // Obtener información de lista de reproducción
             $stmt = $pdo->prepare("SELECT * FROM playlists WHERE id = ? AND user_id = ?");
             $stmt->execute([$playlist_id, $user_id]);
             $playlist = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$playlist) throw new Exception('Lista no encontrada');
 
-            // Get items
+            // Obtener elementos
             $stmt = $pdo->prepare("
                 SELECT pi.id as item_id, s.*, pi.created_at as added_at
                 FROM playlist_items pi
@@ -272,17 +272,17 @@ try {
             $playlist_id = $_POST['playlist_id'] ?? 0;
             $song_id = $_POST['song_id'] ?? 0;
 
-            // Verify ownership
+            // Verificar propiedad
             $stmt = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
             $stmt->execute([$playlist_id, $user_id]);
             if (!$stmt->fetch()) throw new Exception('Lista no encontrada');
 
-            // Check if already exists
+            // Verificar si ya existe
             $stmt = $pdo->prepare("SELECT id FROM playlist_items WHERE playlist_id = ? AND song_id = ?");
             $stmt->execute([$playlist_id, $song_id]);
             if ($stmt->fetch()) throw new Exception('La canción ya está en la lista');
 
-            // Get max position
+            // Obtener posición máxima
             $stmt = $pdo->prepare("SELECT MAX(position) FROM playlist_items WHERE playlist_id = ?");
             $stmt->execute([$playlist_id]);
             $maxPos = $stmt->fetchColumn();
@@ -296,11 +296,11 @@ try {
 
         case 'reorder_playlist':
             $playlist_id = $_POST['playlist_id'] ?? 0;
-            $items = $_POST['items'] ?? []; // Array of playlist_item_ids (NOT song_ids) or song_ids? 
-            // The frontend should send song_ids in order or reference IDs. 
-            // The `get_playlist_details` returns `item_id` (PK of playlist_items). Let's use that.
+            $items = $_POST['items'] ?? []; // ¿Array de playlist_item_ids (NO song_ids) o song_ids?
+            // El frontend debería enviar song_ids en orden o IDs de referencia.
+            // `get_playlist_details` devuelve `item_id` (PK de playlist_items). Usemos eso.
             
-            // Verify ownership
+            // Verificar propiedad
             $stmt = $pdo->prepare("SELECT id FROM playlists WHERE id = ? AND user_id = ?");
             $stmt->execute([$playlist_id, $user_id]);
             if (!$stmt->fetch()) throw new Exception('Lista no encontrada');
@@ -334,17 +334,17 @@ try {
             $current_password = $_POST['current_password'] ?? '';
             $new_password = $_POST['new_password'] ?? '';
             
-            // Validate inputs
+            // Validar entradas
             if (empty($new_password)) {
                 throw new Exception('La nueva contraseña es requerida');
             }
             
-            // Validate new password complexity
+            // Validar complejidad de nueva contraseña
             if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/', $new_password)) {
                 throw new Exception('La contraseña no cumple con los requisitos de seguridad');
             }
             
-            // Get current password hash and google_id
+            // Obtener hash de contraseña actual y google_id
             $stmt = $pdo->prepare("SELECT password_hash, google_id FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -353,8 +353,8 @@ try {
                 throw new Exception('Usuario no encontrado');
             }
 
-            // Verify current password ONLY if not a Google user (or if they provided it)
-            // If user has google_id and empty current_password, we skip check.
+            // Verificar contraseña actual SOLO si no es usuario de Google (o si la proporcionó)
+            // Si el usuario tiene google_id y current_password vacío, omitimos verificación.
             $isGoogleUser = !empty($user['google_id']);
             
             if (!$isGoogleUser) {
@@ -363,18 +363,18 @@ try {
                     throw new Exception('La contraseña actual es incorrecta');
                 }
             } else {
-                // If is GoogleUser but provided a password, verify it just in case? 
-                // Plan says: "skip... if user only has Google login". 
-                // Let's allow skipping if they ARE a google user.
+                // ¿Si es GoogleUser pero proporcionó una contraseña, verificarla por si acaso?
+                // El plan dice: "omitir... si el usuario solo tiene inicio de sesión de Google".
+                // Permitamos omitir si SON usuarios de Google.
                 if (!empty($current_password) && !password_verify($current_password, $user['password_hash'])) {
                      throw new Exception('La contraseña actual es incorrecta');
                 }
             }
             
-            // Hash new password
+            // Hash de nueva contraseña
             $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
             
-            // Update password
+            // Actualizar contraseña
             $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
             $stmt->execute([$new_hash, $user_id]);
             

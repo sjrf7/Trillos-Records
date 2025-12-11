@@ -1,6 +1,5 @@
 <?php
-// Email Configuration for Password Recovery
-// IMPORTANT: Update these settings with your actual SMTP credentials
+// Configuración de correo electrónico para la recuperación de contraseña
 
 require_once 'load_env.php';
 
@@ -12,6 +11,6 @@ define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL'));
 define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME'));
 define('SMTP_ENCRYPTION', getenv('SMTP_ENCRYPTION'));
 
-// Site URL
+// URL del sitio
 define('SITE_URL', getenv('SITE_URL'));
 ?>

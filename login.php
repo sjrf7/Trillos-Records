@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] == 'login') {
-        // LOGIN
+        // INICIO DE SESIÓN
         $email = trim($_POST['email']);
         $pass = $_POST['password'];
 
@@ -51,12 +51,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($user && password_verify($pass, $user['password_hash'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['full_name'];
-            $_SESSION['role'] = $user['role']; // Store role (admin/user)
+            $_SESSION['role'] = $user['role']; // Almacenar rol (admin/usuario)
             
-            // Redirect based on role or just to index
+            // Redireccionar según el rol o simplemente al índice
             if ($user['role'] === 'admin') {
-                // Optional: could redirect to admin.php directly, but user asked for panel access.
-                // staying at index.php is fine generally.
+                // Opcional: podría redirigir a admin.php directamente, pero el usuario pidió acceso al panel.
+                // quedarse en index.php está bien por lo general.
             }
             
             // Redireccionar al home
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            overflow-y: auto; /* Enable scrolling */
+            overflow-y: auto; /* Habilitar desplazamiento */
         }
 
         @keyframes gradientBG {
@@ -237,13 +237,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 300px;
             height: 300px;
             background: #800080;
-            /* Purple accent for contrast */
+            /* Acento púrpura para contraste */
         }
-        /* Custom Google Button Styles */
+        /* Estilos de botón de Google personalizados */
         .google-wrapper {
             position: relative;
             width: 100%;
-            height: 52px; /* Matches py-3 + font size approx */
+            height: 52px; /* Coincide con py-3 + tamaño de fuente aprox */
             border-radius: 0.75rem;
             overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -265,7 +265,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             overflow: hidden;
         }
 
-        /* Ensure the Google iframe inside covers everything */
+        /* Asegurar que el iframe de Google cubra todo */
         .g_id_signin > div {
             width: 100% !important;
             height: 100% !important;
@@ -274,7 +274,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .g_id_signin iframe {
             width: 100% !important;
             height: 100% !important;
-            transform: scale(1.1); /* Slight Zoom to ensure coverage */
+            transform: scale(1.1); /* Ligero Zoom para asegurar cobertura */
         }
 
         .google-custom-btn {
@@ -315,10 +315,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-    <!-- Main Container -->
+    <!-- Contenedor principal -->
     <div class="w-full max-w-md p-6 my-auto">
 
-        <!-- Header / Logo Area -->
+        <!-- Área de cabecera / logo -->
         <div class="text-center mb-8">
             <a href="index.php" class="inline-block mb-4 group">
                 <div
@@ -330,10 +330,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p class="text-gray-400 text-sm">Members Access</p>
         </div>
 
-        <!-- Glass Card -->
+        <!-- Tarjeta de cristal -->
         <div class="glass-card rounded-2xl p-8 relative overflow-hidden">
 
-            <!-- Tabs -->
+            <!-- Pestañas -->
             <div class="flex justify-center space-x-12 mb-8 border-b border-gray-800 pb-2">
                 <button onclick="switchTab('login')" id="tab-login"
                     class="tab-btn active text-lg font-medium pb-1">Iniciar Sesión</button>
@@ -341,7 +341,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     class="tab-btn text-lg font-medium pb-1">Registrarse</button>
             </div>
 
-            <!-- Login Form -->
+            <!-- Formulario de inicio de sesión -->
             <form id="login-form" class="visible-form" action="login.php" method="POST">
                 <input type="hidden" name="action" value="login">
                 <div class="input-group">
@@ -366,7 +366,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </button>
             </form>
 
-            <!-- Register Form -->
+            <!-- Formulario de registro -->
             <form id="register-form" class="hidden-form" action="login.php" method="POST">
                 <input type="hidden" name="action" value="register">
                 <div class="input-group">
@@ -383,7 +383,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i data-lucide="eye" class="password-toggle w-5 h-5" onclick="togglePassword('reg_password', this)"></i>
                 </div>
                 
-                <!-- Password Requirements (Minimalist) -->
+                <!-- Requisitos de contraseña (Minimalista) -->
                 <div class="mb-4 text-xs text-gray-500 space-y-1 pl-1 transition-all duration-300" id="password-reqs">
                     <p class="font-medium mb-1 text-gray-400">La contraseña debe tener:</p>
                     <div class="flex items-center space-x-2 req-item" id="req-lower">
@@ -417,7 +417,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
 
 
-            <!-- Google Sign-In Section -->
+            <!-- Sección de inicio de sesión de Google -->
             <div class="mt-8">
                 <div class="relative mb-6">
                     <div class="absolute inset-0 flex items-center">
@@ -437,7 +437,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
 
                 <div class="google-wrapper">
-                    <!-- The invisible Google button capturing clicks -->
+                    <!-- El botón invisible de Google capturando clics -->
                     <div class="g_id_signin"
                         data-type="standard"
                         data-shape="rectangular"
@@ -448,7 +448,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         data-width="400">
                     </div>
                     
-                    <!-- The Custom Modern Button -->
+                    <!-- El botón moderno personalizado -->
                     <button type="button" class="google-custom-btn w-full py-3 rounded-xl flex items-center justify-center space-x-3 transition-all">
                         <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -471,7 +471,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Message Modal (Reused) -->
+    <!-- Modal de mensaje (Reutilizado) -->
     <div id="msg-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-[200]">
         <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl shadow-2xl max-w-sm text-center">
             <i id="msg-icon" data-lucide="alert-circle" class="w-12 h-12 text-yellow-500 mx-auto mb-3"></i>
@@ -481,13 +481,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Google Identity Services -->
+    <!-- Servicios de identidad de Google -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         lucide.createIcons();
 
         function handleCredentialResponse(response) {
-            // Send the credential to your backend
+            // Enviar la credencial a tu backend
             fetch('google-callback.php', {
                 method: 'POST',
                 headers: {
@@ -552,7 +552,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             showMessage("<?php echo addslashes($message); ?>", "<?php echo $msg_type; ?>");
         <?php endif; ?>
 
-        // Password Validation Logic
+        // Lógica de validación de contraseña
         document.addEventListener('DOMContentLoaded', () => {
             const passwordInput = document.getElementById('reg_password');
             const reqLower = document.getElementById('req-lower');
@@ -563,21 +563,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 passwordInput.addEventListener('input', function() {
                     const val = this.value;
                     
-                    // Check Lowercase
+                    // Verificar minúsculas
                     if (/[a-z]/.test(val)) {
                         setValid(reqLower);
                     } else {
                         setInvalid(reqLower);
                     }
 
-                    // Check Uppercase
+                    // Verificar mayúsculas
                     if (/[A-Z]/.test(val)) {
                         setValid(reqUpper);
                     } else {
                         setInvalid(reqUpper);
                     }
 
-                    // Check Special
+                    // Verificar caracteres especiales
                     if (/[^A-Za-z0-9]/.test(val)) {
                         setValid(reqSpecial);
                     } else {

@@ -24,7 +24,7 @@ if (!isset($_SESSION['user_id'])) {
         .tab-inactive { color: #9CA3AF; }
         .tab-inactive:hover { color: #fff; }
         
-        /* Password Toggle Styles */
+        /* Estilos de alternar contraseña */
         .input-group { position: relative; }
         .password-toggle {
             position: absolute;
@@ -42,7 +42,7 @@ if (!isset($_SESSION['user_id'])) {
 </head>
 <body class="min-h-screen pb-20">
 
-    <!-- Navbar Simple -->
+    <!-- Barra de navegación simple -->
     <nav class="fixed top-0 w-full z-50 glass-panel border-b border-white/5 bg-black/80">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <a href="index.php" class="group flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:border-yellow-500/50 hover:bg-white/10 transition-all duration-300">
@@ -63,7 +63,7 @@ if (!isset($_SESSION['user_id'])) {
 
     <main class="max-w-4xl mx-auto pt-24 px-4">
         
-        <!-- Profile Header -->
+        <!-- Encabezado del perfil -->
         <div class="glass-panel rounded-3xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
             
@@ -78,7 +78,7 @@ if (!isset($_SESSION['user_id'])) {
                 <input type="file" id="photo-input" class="hidden" accept="image/*" onchange="uploadPhoto()">
             </div>
 
-            <!-- Info -->
+            <!-- Información -->
             <div class="flex-1 text-center md:text-left">
                 <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
                     <h1 id="user-name" class="text-3xl font-bold text-white brand-title">Cargando...</h1>
@@ -88,7 +88,7 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
                 <p class="text-gray-400 mb-6">Miembro de Trillos Visual Records</p>
                 
-                <!-- Stats -->
+                <!-- Estadísticas -->
                 <div class="flex justify-center md:justify-start gap-8">
                     <div class="text-center">
                         <span id="stat-playlists" class="block text-2xl font-bold text-yellow-500">0</span>
@@ -100,7 +100,7 @@ if (!isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 
-                <!-- Change Password Button -->
+                <!-- Botón de cambiar contraseña -->
                 <button onclick="openChangePasswordModal()" class="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-500/50 rounded-lg transition-all text-sm font-medium text-gray-300 hover:text-white mx-auto md:mx-0">
                     <i data-lucide="lock" class="w-4 h-4"></i>
                     <span>Cambiar Contraseña</span>
@@ -108,7 +108,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
+        <!-- Pestañas de navegación -->
         <div class="flex border-b border-gray-800 mb-8 overflow-x-auto">
             <button onclick="switchTab('playlists')" id="tab-playlists" class="tab-active px-6 py-4 font-medium transition-colors whitespace-nowrap">
                 Mis Listas
@@ -121,11 +121,11 @@ if (!isset($_SESSION['user_id'])) {
             </button>
         </div>
 
-        <!-- Content Sections -->
+        <!-- Secciones de contenido -->
         
-        <!-- Playlists Section -->
+        <!-- Sección de listas de reproducción -->
         <div id="section-playlists" class="space-y-6">
-            <!-- Playlist List View -->
+            <!-- Vista de lista de listas de reproducción -->
             <div id="playlists-list-view">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-white">Listas de Reproducción</h2>
@@ -135,11 +135,11 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
                 
                 <div id="playlists-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <!-- Dynamic Content -->
+                    <!-- Contenido dinámico -->
                 </div>
             </div>
 
-            <!-- Playlist Detail View -->
+            <!-- Vista de detalle de lista de reproducción -->
             <div id="playlist-detail-view" class="hidden group">
                  <div class="flex items-center gap-4 mb-6">
                     <button onclick="closePlaylistDetail()" class="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition">
@@ -149,7 +149,7 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="flex items-center gap-4">
                         <div class="flex items-baseline gap-3">
                              <h2 id="detail-playlist-name" class="text-2xl font-bold text-white">Playlist Name</h2>
-                             <!-- Actions Inline -->
+                             <!-- Acciones en línea -->
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onclick="openRenamePlaylistModal()" class="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition" title="Editar Nombre">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
@@ -168,14 +168,14 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
 
                 <div id="playlist-items-list" class="space-y-2">
-                    <!-- Dynamic Items -->
+                    <!-- Elementos dinámicos -->
                 </div>
             </div>
         </div>
 
-        <!-- Likes Section -->
+        <!-- Sección de Me Gusta -->
         <div id="section-likes" class="hidden space-y-8">
-            <!-- Liked Songs -->
+            <!-- Canciones que te gustan -->
             <div>
                 <h3 class="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
                     <i data-lucide="music" class="w-5 h-5 text-yellow-500"></i> Canciones
@@ -184,7 +184,7 @@ if (!isset($_SESSION['user_id'])) {
                     <!-- Dynamic -->
                 </div>
             </div>
-            <!-- Liked Videos -->
+            <!-- Videos que te gustan -->
             <div>
                 <h3 class="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
                     <i data-lucide="video" class="w-5 h-5 text-yellow-500"></i> Videos
@@ -195,7 +195,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </div>
 
-        <!-- History Section -->
+        <!-- Sección de historial -->
         <div id="section-history" class="hidden space-y-6">
             <h2 class="text-xl font-bold text-white">Actividad Reciente</h2>
             <div id="history-list" class="space-y-2">
@@ -205,7 +205,7 @@ if (!isset($_SESSION['user_id'])) {
 
     </main>
 
-    <!-- Generic Modal Template -->
+    <!-- Plantilla de modal genérico -->
     <div id="generic-modal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div id="generic-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-8 max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 relative">
             <button onclick="closeGenericModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -213,7 +213,7 @@ if (!isset($_SESSION['user_id'])) {
             </button>
             <h3 id="generic-modal-title" class="text-xl font-bold text-white mb-6">Título</h3>
             <div id="generic-modal-body">
-                <!-- Dynamic Input -->
+                <!-- Entrada dinámica -->
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeGenericModal()" class="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancelar</button>
@@ -222,7 +222,7 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <!-- Confirm Dialog Modal -->
+    <!-- Modal de diálogo de confirmación -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/80 hidden z-[80] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 relative" id="confirm-modal-content">
             <h3 class="text-xl font-bold text-white mb-2">¿Estás seguro?</h3>
@@ -234,7 +234,7 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <!-- Song Selector Modal -->
+    <!-- Modal de selector de canciones -->
     <div id="song-selector-modal" class="fixed inset-0 bg-black/80 hidden z-[70] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-lg w-full h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 relative" id="song-selector-content">
             <div class="flex justify-between items-center mb-6">
@@ -247,12 +247,12 @@ if (!isset($_SESSION['user_id'])) {
             <input type="text" id="song-search-input" placeholder="Buscar canciones..." class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white mb-4 focus:border-yellow-500 focus:outline-none">
             
             <div id="song-selector-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                <!-- Songs List -->
+                <!-- Lista de canciones -->
             </div>
         </div>
     </div>
 
-    <!-- Change Password Modal -->
+    <!-- Modal de cambiar contraseña -->
     <div id="password-modal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div id="password-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-8 max-w-md w-full transform scale-95 opacity-0 transition-all duration-300 relative">
             <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -277,7 +277,7 @@ if (!isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 
-                <!-- Password Requirements -->
+                <!-- Requisitos de contraseña -->
                 <div class="text-xs text-gray-500 space-y-1 pl-1">
                     <div class="flex items-center space-x-2 req-item" id="pwd-req-lower">
                         <div class="w-1.5 h-1.5 rounded-full bg-gray-600 transition-colors"></div>
@@ -310,7 +310,7 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 
 
-    <!-- Toast Notification -->
+    <!-- Notificación Toast -->
     <div id="toast-container" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[4000] pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
         <div class="bg-black/80 backdrop-blur-xl border border-green-500/30 rounded-full px-6 py-3 shadow-2xl flex items-center gap-3">
              <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 relative">
@@ -356,17 +356,17 @@ if (!isset($_SESSION['user_id'])) {
         }
 
 
-        // Load Initial Data
+        // Cargar datos iniciales
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadPlaylists(); 
         });
 
         // ------------------------------------------
-        // TABS LOGIC
+        // LÓGICA DE PESTAÑAS
         // ------------------------------------------
         function switchTab(tabName) {
-            // Update Tab Styles
+            // Actualizar estilos de pestaña
             ['playlists', 'likes', 'history'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const section = document.getElementById(`section-${t}`);
@@ -388,7 +388,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         // ------------------------------------------
-        // API CALLS
+        // LLAMADAS A API
         // ------------------------------------------
         async function api(formData) {
             try {
@@ -410,13 +410,13 @@ if (!isset($_SESSION['user_id'])) {
             
             api(fd).then(data => {
                 if (data.success) {
-                    window.isGoogleUser = !!data.user.google_id; // Store flag
+                    window.isGoogleUser = !!data.user.google_id; // Almacenar bandera
                     document.getElementById('user-name').textContent = data.user.full_name;
                     const img = document.getElementById('profile-pic');
                     if (data.user.profile_pic) {
                         img.src = data.user.profile_pic;
                     } else {
-                        // Use user's name for initials with brand colors (Gold background, Black text)
+                        // Usar nombre de usuario para iniciales con colores de marca (Fondo dorado, Texto negro)
                         img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.full_name)}&background=FFD700&color=000000`; 
                     }
                     document.getElementById('stat-playlists').textContent = data.stats.playlists;
@@ -437,7 +437,7 @@ if (!isset($_SESSION['user_id'])) {
                     data.playlists.forEach(pl => {
                         const el = document.createElement('div');
                         el.className = 'glass-panel p-6 rounded-xl hover:bg-white/5 transition group cursor-pointer';
-                        el.onclick = () => openPlaylistDetail(pl.id); // Add click handler
+                        el.onclick = () => openPlaylistDetail(pl.id); // Añadir manejador de clics
                         el.innerHTML = `
                             <div class="flex items-center gap-4 mb-4">
                                 <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-lg shadow-lg flex items-center justify-center">
@@ -541,7 +541,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         // ------------------------------------------
-        // MODALS LOGIC
+        // LÓGICA DE MODALES
         // ------------------------------------------
         const modal = document.getElementById('generic-modal');
         const modalContent = document.getElementById('generic-modal-content');
@@ -555,7 +555,7 @@ if (!isset($_SESSION['user_id'])) {
                 <input type="text" id="modal-input" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-yellow-500 focus:outline-none transition" placeholder="${inputPlaceholder}" value="${initialValue}">
             `;
             
-            // Focus input after modal opens
+            // Enfocar entrada después de abrir modal
             setTimeout(() => document.getElementById('modal-input').focus(), 100);
 
             modalAction.onclick = () => {
@@ -564,7 +564,7 @@ if (!isset($_SESSION['user_id'])) {
                 closeGenericModal();
             };
 
-            // Enter key support
+            // Soporte para tecla Enter
             modalBody.onkeyup = (e) => {
                 if(e.key === 'Enter') modalAction.click();
             };
@@ -585,7 +585,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         // ------------------------------------------
-        // ACTIONS (USING MODALS)
+        // ACCIONES (USANDO MODALES)
         // ------------------------------------------
         function openCreatePlaylistModal() {
             openModal('Nueva Lista', 'Nombre de la lista', '', async (name) => {
@@ -645,7 +645,7 @@ if (!isset($_SESSION['user_id'])) {
 
 
         // ------------------------------------------
-        // PLAYLIST DETAIL LOGIC
+        // LÓGICA DE DETALLE DE LISTA DE REPRODUCCIÓN
         // ------------------------------------------
         let currentPlaylistId = null;
         let allSongsCache = [];
@@ -695,10 +695,10 @@ if (!isset($_SESSION['user_id'])) {
                             `;
                         });
                         
-                        // Initialize Sortable
+                        // Inicializar Sortable
                         new Sortable(list, {
                             animation: 150,
-                            handle: '.cursor-grab', // Drag handle selector
+                            handle: '.cursor-grab', // Selector de manejador de arrastre
                             ghostClass: 'bg-yellow-500/10',
                             onEnd: function (evt) {
                                 savePlaylistOrder(id);
@@ -720,7 +720,7 @@ if (!isset($_SESSION['user_id'])) {
             const fd = new FormData();
             fd.append('action', 'reorder_playlist');
             fd.append('playlist_id', playlistId);
-            items.forEach(id => fd.append('items[]', id)); // Send as array
+            items.forEach(id => fd.append('items[]', id)); // Enviar como array
 
             api(fd).then(res => {
                 if(!res.success) console.error('Error saving order', res);
@@ -728,7 +728,7 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         // ------------------------------------------
-        // ADD SONG LOGIC
+        // LÓGICA DE AÑADIR CANCIÓN
         // ------------------------------------------
 
 
@@ -981,8 +981,8 @@ if (!isset($_SESSION['user_id'])) {
 
 
 
-            // Validation: Require current password only if NOT google user logic (frontend check)
-            // But better, check if field is hidden.
+            // Validación: Requerir contraseña actual solo si NO es lógica de usuario de google (verificación frontend)
+            // Pero mejor, verificar si el campo está oculto.
             const isHidden = document.getElementById('current-password').closest('div').parentElement.classList.contains('hidden');
             
             if ((!isHidden && !currentPwd) || !newPwd || !confirmPwd) {

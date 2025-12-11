@@ -2,7 +2,7 @@
 session_start();
 require 'db.php';
 
-// Fetch songs
+// Obtener canciones
 try {
     $stmt = $pdo->query("SELECT * FROM songs ORDER BY created_at DESC");
     $songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -10,7 +10,7 @@ try {
     $songs = [];
 }
 
-// Fetch videos
+// Obtener videos
 try {
     $stmt = $pdo->query("SELECT * FROM videos ORDER BY created_at DESC");
     $videos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -19,36 +19,36 @@ try {
 }
 
 
-// Fetch user info and likes if logged in
+// Obtener información del usuario y 'me gusta' si ha iniciado sesión
 $userProfilePic = null;
 $likedSongs = [];
 $likedVideos = [];
 
 if (isset($_SESSION['user_id'])) {
     try {
-        // User Info
+        // Información del usuario
         $stmt = $pdo->prepare("SELECT profile_pic FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $tempPic = $stmt->fetchColumn();
         
-        // Validate image: URL or existing local file
+        // Validar imagen: URL o archivo local existente
         if ($tempPic && (filter_var($tempPic, FILTER_VALIDATE_URL) || file_exists($tempPic))) {
             $userProfilePic = $tempPic;
         } else {
             $userProfilePic = null;
         }
 
-        // Liked Songs
+        // Canciones que gustan
         $stmt = $pdo->prepare("SELECT item_id FROM likes WHERE user_id = ? AND type = 'song'");
         $stmt->execute([$_SESSION['user_id']]);
         $likedSongs = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        // Liked Videos
+        // Videos que gustan
         $stmt = $pdo->prepare("SELECT item_id FROM likes WHERE user_id = ? AND type = 'video'");
         $stmt->execute([$_SESSION['user_id']]);
         $likedVideos = $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Exception $e) {
-        // Ignore error
+        // Ignorar error
     }
 }
 ?>
@@ -153,7 +153,7 @@ if (isset($_SESSION['user_id'])) {
             position: fixed;
             bottom: 1.5rem;
             left: 50%;
-            /* transform: translateX(-50%); REMOVED to allow JS/Tailwind transform control */
+            /* transform: translateX(-50%); ELIMINADO para permitir control de transformación JS/Tailwind */
             width: 95%;
             max-width: 1200px;
             z-index: 900;
@@ -164,7 +164,7 @@ if (isset($_SESSION['user_id'])) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.1);
         }
 
-        /* Waveform Seek Bar Styles */
+        /* Estilos de la barra de búsqueda de onda */
         .waveform-container {
             position: relative;
             width: 100%;
@@ -205,7 +205,7 @@ if (isset($_SESSION['user_id'])) {
             transition: width 0.1s linear;
         }
 
-        /* Invisible range input on top */
+        /* Entrada de rango invisible encima */
         .waveform-input {
             position: absolute;
             top: 0;
@@ -248,7 +248,7 @@ if (isset($_SESSION['user_id'])) {
             }
         }
 
-        /* iOS Style Top Dock */
+        /* Barra superior estilo iOS */
         .ios-dock {
             position: fixed;
             top: 1.5rem;
@@ -320,7 +320,7 @@ if (isset($_SESSION['user_id'])) {
             background: rgba(255, 255, 255, 0.1);
         }
         
-        /* New Profile Styles */
+        /* Nuevos estilos de perfil */
         .profile-menu {
             display: flex;
             align-items: center;
@@ -342,7 +342,7 @@ if (isset($_SESSION['user_id'])) {
             border: 2px solid rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-            overflow: hidden; /* Ensure image stays within circle */
+            overflow: hidden; /* Asegurar que la imagen permanezca dentro del círculo */
         }
 
         /* Ocultar texto en móviles muy pequeños */
@@ -386,9 +386,9 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- HERO HEADER CON VIDEO LLAMATIVO (REQUISITO) -->
 
-    <!-- iOS Dock Navigation -->
+    <!-- Navegación Dock iOS -->
     <nav class="ios-dock transition-all duration-500 ease-in-out" id="main-dock">
-        <!-- Normal Content -->
+        <!-- Contenido normal -->
         <div id="dock-main-content" class="flex items-center w-full justify-between">
             <div class="ios-dock-logo shrink-0">
             <a href="#">
@@ -396,7 +396,7 @@ if (isset($_SESSION['user_id'])) {
             </a>
         </div>
         <div class="flex items-center space-x-1 sm:space-x-2">
-            <!-- Search Trigger -->
+            <!-- Activador de búsqueda -->
             <button onclick="toggleDockSearch()" class="ios-nav-link text-white hover:text-yellow-500 transition-colors" aria-label="Buscar">
                  <i data-lucide="search" class="w-5 h-5"></i>
             </button>
@@ -416,7 +416,7 @@ if (isset($_SESSION['user_id'])) {
             </a>
             <div class="h-4 w-px bg-gray-700 mx-1"></div>
             <?php if (isset($_SESSION['user_name'])): 
-                // Generate initials
+                // Generar iniciales
                 $nameParts = explode(' ', $_SESSION['user_name']);
                 $initials = '';
                 if (count($nameParts) > 0) {
@@ -438,7 +438,7 @@ if (isset($_SESSION['user_id'])) {
                         <?php endif; ?>
                     </button>
                     
-                    <!-- Dropdown Menu -->
+                    <!-- Menú desplegable -->
                     <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-black/90 backdrop-blur-xl border border-yellow-500/20 rounded-xl shadow-2xl py-2 z-50 transform origin-top-right transition-all duration-200">
                         <div class="px-4 py-2 border-b border-gray-800 mb-2">
                             <p class="text-xs text-gray-400">Hola,</p>
@@ -468,7 +468,7 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div> 
 
-    <!-- Search Container (Initially Hidden) -->
+    <!-- Contenedor de búsqueda (Inicialmente oculto) -->
     <div id="dock-search-container" class="hidden w-full flex items-center justify-between" style="min-width: 300px;">
         <div class="relative w-full">
             <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
@@ -499,7 +499,7 @@ if (isset($_SESSION['user_id'])) {
             <p class="text-xl md:text-3xl text-gray-300 font-light mb-8 max-w-2xl mx-auto">
                 El Aliado de tus momentos | Palabras que inspiran
             </p>
-            <!-- Search Bar Removed -->
+            <!-- Barra de búsqueda eliminada -->
             <a href="#music" class="inline-flex items-center gap-2 px-8 py-3 bg-[#EAB308] hover:bg-yellow-400 text-black font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]">
                 <i data-lucide="headphones" class="w-5 h-5"></i>
                 Escucha el Nuevo Sencillo
@@ -515,7 +515,7 @@ if (isset($_SESSION['user_id'])) {
                 Lanzamientos Recientes
             </h2>
 
-            <!-- Search Bar Moved to Hero -->
+            <!-- Barra de búsqueda movida al Hero -->
 
             <!-- Grid de Carátulas Reproducibles -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -537,13 +537,13 @@ if (isset($_SESSION['user_id'])) {
                                 <i data-lucide="play-circle" class="w-16 h-16 text-yellow-500 pulsing-play"></i>
                             </div>
                         </div>
-                        <!-- Share Button -->
+                        <!-- Botón compartir -->
                         <button onclick="event.stopPropagation(); openShareModal('song', <?php echo $song['id']; ?>)" 
                             class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Compartir">
                             <i data-lucide="share-2" class="w-4 h-4"></i>
                         </button>
-                        <!-- Like Button -->
+                        <!-- Botón Me gusta -->
                         <?php 
                         $isLiked = in_array($song['id'], $likedSongs);
                         $likeClass = $isLiked ? 'text-red-500' : 'text-white';
@@ -594,13 +594,13 @@ if (isset($_SESSION['user_id'])) {
                                     class="w-16 h-16 text-yellow-500 bg-black bg-opacity-70 p-3 rounded-full transition duration-300 group-hover:scale-110"></i>
                             </div>
                         </div>
-                        <!-- Share Button -->
+                        <!-- Botón compartir -->
                         <button onclick="event.stopPropagation(); openShareModal('video', <?php echo $video['id']; ?>)" 
                             class="absolute top-2 right-2 p-2 bg-black/60 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 z-30"
                             title="Compartir">
                             <i data-lucide="share-2" class="w-4 h-4"></i>
                         </button>
-                        <!-- Like Button -->
+                        <!-- Botón Me gusta -->
                         <?php 
                         $isLikedVideo = in_array($video['id'], $likedVideos);
                         $likeClassVideo = $isLikedVideo ? 'text-red-500' : 'text-white';
@@ -636,7 +636,7 @@ if (isset($_SESSION['user_id'])) {
                 <a href="https://www.facebook.com/suspirosqueenloquecen/" target="_blank" class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center hover:bg-white/10 transition-colors">
                     <i data-lucide="facebook" class="w-6 h-6"></i>
                 </a>
-                <!-- Instagram (Replaces Twitter) -->
+                <!-- Instagram (Reemplaza a Twitter) -->
                 <a href="https://www.instagram.com/trillos_visual_records/" target="_blank" class="share-button p-3 rounded-full bg-gray-800 text-yellow-500 flex items-center hover:bg-white/10 transition-colors">
                     <i data-lucide="instagram" class="w-6 h-6"></i>
                 </a>
@@ -709,8 +709,8 @@ if (isset($_SESSION['user_id'])) {
                 class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500">
         </div>
 
-        <!-- Close/Hide Button -->
-        <!-- Close/Hide Button -->
+        <!-- Botón Cerrar/Ocultar -->
+        <!-- Botón Cerrar/Ocultar -->
         <button id="toggle-player-btn" onclick="togglePlayer()" class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-black border border-yellow-500/30 rounded-full p-2 text-white hover:bg-yellow-500 hover:text-black transition-all shadow-[0_-5px_15px_rgba(0,0,0,0.5)] z-50 group" title="Mostrar/Ocultar Reproductor">
              <i data-lucide="chevron-down" class="w-6 h-6 group-hover:animate-bounce"></i>
         </button>
@@ -760,7 +760,7 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <!-- SHARE MODAL (Social & Copy) -->
+    <!-- MODAL COMPARTIR (Social y Copiar) -->
     <div id="share-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[2200] transition-opacity duration-300 opacity-0" onclick="closeShareModal()">
         <div class="relative w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl transform transition-all scale-95 opacity-0" id="share-modal-content" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between mb-6">
@@ -795,7 +795,7 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                     <span class="text-xs text-gray-400 group-hover:text-white">Instagram</span>
                 </button>
-                <!-- Copy Link -->
+                <!-- Copiar enlace -->
                 <button onclick="shareSocial('copy')" class="flex flex-col items-center gap-2 group">
                     <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-all">
                         <i data-lucide="link" class="w-6 h-6"></i>
@@ -804,7 +804,7 @@ if (isset($_SESSION['user_id'])) {
                 </button>
             </div>
 
-            <!-- Input readonly with link -->
+            <!-- Input de solo lectura con enlace -->
             <div class="relative">
                 <input type="text" id="share-link-input" readonly class="w-full bg-black/50 border border-gray-800 text-gray-400 text-sm rounded-lg px-4 py-3 pr-12 focus:outline-none focus:border-yellow-500/50 transition-colors">
                 <button onclick="shareSocial('copy')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors">
@@ -822,7 +822,7 @@ if (isset($_SESSION['user_id'])) {
         // Inicializa los iconos de Lucide
         lucide.createIcons();
 
-        // Pass PHP data to JS for clientside search
+        // Pasar datos PHP a JS para búsqueda del lado del cliente
         const allSongs = <?php echo json_encode($songs); ?>;
         const allVideos = <?php echo json_encode($videos); ?>;
         const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
@@ -880,7 +880,7 @@ if (isset($_SESSION['user_id'])) {
         // CONTROL DE REPRODUCTOR
         // -------------------------
         // -------------------------
-        // FUNCIONES DE PERFIL (Injected)
+        // FUNCIONES DE PERFIL (Inyectadas)
         // -------------------------
         function addToHistory(type, id) {
              if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) return;
@@ -956,7 +956,7 @@ if (isset($_SESSION['user_id'])) {
             const songId = card.dataset.id;
             if (songId) addToHistory('song', songId);
 
-            // Show Player
+            // Mostrar reproductor
             const playerBar = document.getElementById('audio-player-bar');
             if(playerBar) {
                 playerBar.classList.remove('hidden', 'translate-y-full', 'translate-y-[130%]', 'translate-y-[calc(100%_+_1.5rem)]');
@@ -1029,7 +1029,7 @@ if (isset($_SESSION['user_id'])) {
             }
         }
 
-        // Audio Events
+        // Eventos de audio
         audio.addEventListener('loadedmetadata', () => {
             if(totalTimeEl) totalTimeEl.textContent = formatTime(audio.duration);
             if(seekBar) seekBar.max = audio.duration;
@@ -1131,7 +1131,7 @@ if (isset($_SESSION['user_id'])) {
         if(document.getElementById('prev-btn')) document.getElementById('prev-btn').addEventListener('click', playPrevTrack);
         if(document.getElementById('next-btn')) document.getElementById('next-btn').addEventListener('click', playNextTrack);
         
-        // Auto-play next track when current one ends gets added to ensure flow
+        // Reproducción automática de la siguiente pista cuando termina la actual
         audio.addEventListener('ended', playNextTrack);
         if(playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
         
@@ -1139,7 +1139,7 @@ if (isset($_SESSION['user_id'])) {
 
 
         // -------------------------
-        // DOCK SEARCH LOGIC
+        // LÓGICA DE BÚSQUEDA DEL DOCK
         // -------------------------
         function toggleDockSearch() {
             const dock = document.getElementById('main-dock');
@@ -1162,7 +1162,7 @@ if (isset($_SESSION['user_id'])) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Check for URL params to auto-play
+            // Comprobar parámetros URL para reproducción automática
             const urlParams = new URLSearchParams(window.location.search);
             const songId = urlParams.get('song');
             const videoId = urlParams.get('video');
@@ -1170,11 +1170,11 @@ if (isset($_SESSION['user_id'])) {
             if (songId) {
                 const song = allSongs.find(s => s.id == songId);
                 if (song) {
-                    // Create a dummy element to pass to loadAndPlayTrack or call logic directly
-                    // Since loadAndPlayTrack expects an element with data attributes, let's look for one or create mock
-                    // Easier: just set the player state manually if function is coupled to DOM
-                    // Check if there is a DOM element for this song (e.g. in search results or hidden list?)
-                    // Actually, we can just reproduce loadAndPlayTrack logic here for clean variable access:
+                    // Crear un elemento ficticio para loadAndPlayTrack
+                    // Como loadAndPlayTrack espera un elemento con atributos de datos, buscamos uno o creamos un simulacro
+                    // Más fácil: establecer el estado manualmente si la función está acoplada al DOM
+                    // ¿Hay un elemento DOM para esta canción (ej. en resultados)?
+                    // En realidad, podemos reproducir la lógica de loadAndPlayTrack aquí:
                     loadAndPlayTrack({
                         dataset: {
                             title: song.title,
@@ -1183,7 +1183,7 @@ if (isset($_SESSION['user_id'])) {
                             audioUrl: song.audio_path,
                             id: song.id
                         },
-                        getAttribute: () => null // Prevent error if logic falls back
+                        getAttribute: () => null // Prevenir error si la lógica falla
                     });
                 }
             } else if (videoId) {
@@ -1341,7 +1341,7 @@ if (isset($_SESSION['user_id'])) {
              const content = document.getElementById('share-modal-content');
              if(modal) {
                  modal.classList.remove('hidden');
-                 // Force reflow
+                 // Forzar reflujo
                  void modal.offsetWidth;
                  modal.classList.remove('opacity-0');
                  
@@ -1412,8 +1412,8 @@ if (isset($_SESSION['user_id'])) {
 
         async function toggleLike(type, id, btn) {
             if(!isLoggedIn) { showMessage('Inicia sesión para esto'); return; }
-            // Add actual fetch call if needed, simplified for safe restore
-            // The original had full fetch logic
+            // Agregar llamada fetch real si es necesario
+            // El original tenía lógica fetch completa
             const fd = new FormData();
             fd.append('action', 'toggle_like');
             fd.append('type', type);
@@ -1443,7 +1443,7 @@ if (isset($_SESSION['user_id'])) {
         }
     </script>
 
-    <!-- Global Search Results Modal (Styled like Profile) -->
+    <!-- Modal de resultados de búsqueda global (Estilizado como Perfil) -->
     <div id="share-modal" class="fixed inset-0 bg-black/90 hidden z-[3000] flex items-center justify-center opacity-0 transition-opacity duration-300">
         <div id="share-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 relative">
             <button onclick="closeShareModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -1474,7 +1474,7 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                     <span class="text-xs text-gray-400 group-hover:text-white">Telegram</span>
                 </button>
-                <!-- Copy Link -->
+                <!-- Copiar enlace -->
                 <button onclick="shareSocial('copy')" class="flex flex-col items-center gap-2 group">
                     <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-all">
                         <i data-lucide="link" class="w-6 h-6"></i>
@@ -1483,7 +1483,7 @@ if (isset($_SESSION['user_id'])) {
                 </button>
             </div>
 
-            <!-- Input readonly with link -->
+            <!-- Input de solo lectura con enlace -->
             <div class="relative">
                 <input type="text" id="share-link-input" readonly class="w-full bg-black/50 border border-gray-800 text-gray-400 text-sm rounded-lg px-4 py-3 pr-12 focus:outline-none focus:border-yellow-500/50 transition-colors">
                 <button onclick="shareSocial('copy')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors">
@@ -1494,7 +1494,7 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <div id="search-modal" class="fixed inset-0 bg-black/90 hidden z-[2000] flex items-start justify-center pt-28 opacity-0 transition-opacity duration-300">
-        <!-- Modal Content -->
+        <!-- Contenido del modal -->
         <div id="search-modal-content" class="bg-[#111] border border-gray-800 rounded-2xl p-6 max-w-4xl w-full h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 relative shadow-2xl shadow-yellow-900/20">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-yellow-500 brand-title">Resultados de Búsqueda</h2>
@@ -1503,9 +1503,9 @@ if (isset($_SESSION['user_id'])) {
                 </button>
             </div>
 
-            <!-- Scrollable Results -->
+            <!-- Resultados desplazables -->
             <div id="search-results-container" class="flex-1 overflow-y-auto custom-scrollbar pb-4 space-y-6 pr-2">
-                <!-- Results will be injected here -->
+                <!-- Los resultados se inyectarán aquí -->
             </div>
         </div>
     </div>

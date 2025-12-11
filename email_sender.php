@@ -9,11 +9,11 @@ require 'PHPMailer/src/SMTP.php';
 require_once 'email_config.php';
 
 function sendPasswordResetEmail($to_email, $reset_link, $user_name) {
-    // Create an instance; passing `true` enables exceptions
+    // Crear una instancia; pasar true habilita excepciones
     $mail = new PHPMailer(true);
 
     try {
-        //Server settings
+        // Configuración del servidor
         $mail->isSMTP();                                            
         $mail->Host       = SMTP_HOST;                     
         $mail->SMTPAuth   = true;                                   
@@ -23,11 +23,11 @@ function sendPasswordResetEmail($to_email, $reset_link, $user_name) {
         $mail->Port       = SMTP_PORT;                                    
         $mail->CharSet    = 'UTF-8';                                      
 
-        //Recipient
+        // Destinatario
         $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
         $mail->addAddress($to_email, $user_name);     
 
-        //Content
+        // Contenido
         $mail->isHTML(true);                                  
         $mail->Subject = "Recuperación de Contraseña - Trillos Visual Records";
         

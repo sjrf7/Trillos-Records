@@ -2,7 +2,7 @@
 session_start();
 require 'db.php';
 
-// Access Control
+// Control de Acceso
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -11,7 +11,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $message = '';
 $error = '';
 
-// Check for AJAX/Fetch (Send JSON)
+// Verificar si es AJAX/Fetch (Enviar JSON)
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
 function jsonResponse($success, $msg) {
@@ -25,12 +25,12 @@ function jsonResponse($success, $msg) {
 
 
 
-// Handle Song Upload
+// Manejar subida de canción
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_song') {
     $title = trim($_POST['title']);
     $artist = trim($_POST['artist']);
     
-    // File handling
+    // Manejo de archivos
     $cover = $_FILES['cover'];
     $audio = $_FILES['audio'];
     
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $uploadDir = 'uploads/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         
-        // Generate unique names
+        // Generar nombres únicos
         $coverName = uniqid() . '_' . basename($cover['name']);
         $audioName = uniqid() . '_' . basename($audio['name']);
         
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Video Add (Local Upload)
+// Manejar adición de video (Subida local)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_video') {
     $title = trim($_POST['title']);
     
@@ -102,21 +102,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Song Deletion
+// Manejar eliminación de canción
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_song') {
     $id = $_POST['id'];
     
-    // Fetch paths
+    // Obtener rutas
     $stmt = $pdo->prepare("SELECT cover_path, audio_path FROM songs WHERE id = ?");
     $stmt->execute([$id]);
     $song = $stmt->fetch();
     
     if ($song) {
-        // Delete files
+        // Eliminar archivos
         if (file_exists($song['cover_path'])) unlink($song['cover_path']);
         if (file_exists($song['audio_path'])) unlink($song['audio_path']);
         
-        // Delete DB record
+        // Eliminar registro de BD
         $stmt = $pdo->prepare("DELETE FROM songs WHERE id = ?");
         if ($stmt->execute([$id])) {
             $message = "Canción eliminada correctamente.";
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Video Deletion (File Cleanup)
+// Manejar eliminación de video (Limpieza de archivos)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_video') {
     $id = $_POST['id'];
     
@@ -152,12 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Video Editing
+// Manejar edición de video
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_video') {
     $id = $_POST['video_id'];
     $title = trim($_POST['title']);
     
-    // Fetch current data
+    // Obtener datos actuales
     $stmt = $pdo->prepare("SELECT video_path, cover_path FROM videos WHERE id = ?");
     $stmt->execute([$id]);
     $currentVideo = $stmt->fetch();
@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $coverPath = $currentVideo['cover_path'];
         $uploadDir = 'uploads/';
         
-        // Handle New Cover
+        // Manejar nueva carátula
         if (isset($_FILES['video_cover']) && $_FILES['video_cover']['error'] === 0) {
             $coverName = uniqid() . '_thumb_' . basename($_FILES['video_cover']['name']);
             $newCoverPath = $uploadDir . $coverName;
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         
-        // Handle New Video File
+        // Manejar nuevo archivo de video
         if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] === 0) {
             $videoName = uniqid() . '_vid_' . basename($_FILES['video_file']['name']);
             $newVideoPath = $uploadDir . $videoName;
@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Song Editing
+// Manejar edición de canción
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_song') {
     $id = $_POST['song_id'];
     $title = trim($_POST['title']);
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         
-        // Handle New Audio
+        // Manejar nuevo audio
         if (isset($_FILES['audio']) && $_FILES['audio']['error'] === 0) {
             $audioName = uniqid() . '_' . basename($_FILES['audio']['name']);
             $newAudioPath = $uploadDir . $audioName;
@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         
-        // Update DB
+        // Actualizar BD
         $stmt = $pdo->prepare("UPDATE songs SET title = ?, artist = ?, cover_path = ?, audio_path = ? WHERE id = ?");
         if ($stmt->execute([$title, $artist, $coverPath, $audioPath, $id])) {
             $message = "Canción actualizada correctamente.";
@@ -246,19 +246,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Fetch existing songs for management
+// Obtener canciones existentes para gestión
 $songs = $pdo->query("SELECT * FROM songs ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
-// Fetch existing videos
+// Obtener videos existentes
 $allVideos = $pdo->query("SELECT * FROM videos ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
-// Calculate stats
+// Calcular estadísticas
 $totalSongs = $pdo->query("SELECT COUNT(*) FROM songs")->fetchColumn();
 $totalVideos = $pdo->query("SELECT COUNT(*) FROM videos")->fetchColumn();
 
-// Fetch Statistics
+// Obtener estadísticas
 $totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
 $totalAdmins = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 
-// Fetch Recent Activity (Combined)
+// Obtener actividad reciente (Combinada)
 $recentActivity = $pdo->query("
     (SELECT title, created_at, 'song' as type FROM songs) 
     UNION 
@@ -267,11 +267,11 @@ $recentActivity = $pdo->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // Determine Active Tab
-// Determine Active Tab
+// Determinar pestaña activa
 $activeTab = 'upload';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $act = $_POST['action'];
-    // Only switch to library if editing or deleting
+    // Solo cambiar a biblioteca si se edita o elimina
     if ($act === 'edit_song' || $act === 'delete_song') {
         $activeTab = 'library';
     } elseif ($act === 'edit_video' || $act === 'delete_video') {
@@ -357,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 <body class="bg-black text-gray-200 min-h-screen flex md:overflow-hidden">
 
-    <!-- Sidebar -->
+    <!-- Barra lateral -->
     <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-20 hidden md:flex">
         <div class="p-8">
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
@@ -391,9 +391,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </nav>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Contenido principal -->
     <main class="flex-1 relative md:overflow-y-auto">
-        <!-- Header Mobile -->
+        <!-- Cabecera móvil -->
         <div class="md:hidden p-4 glass-panel flex justify-between items-center sticky top-0 z-30">
             <div class="flex items-center gap-2">
                 <img src="./assets/Logo.png" alt="Logo" class="h-8 w-auto">
@@ -411,9 +411,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         <div class="p-8 max-w-7xl mx-auto">
             
-            <!-- Quick Stats Removed -->
+            <!-- Estadísticas rápidas eliminadas -->
 
-            <!-- Toast Messages -->
+            <!-- Mensajes Toast -->
             <?php if ($message): ?>
                 <div class="mb-8 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center justify-between gap-3 animate-fade-in">
                     <div class="flex items-center gap-3">
@@ -433,12 +433,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             <?php endif; ?>
 
-            <!-- View: Upload (Default) -->
+            <!-- Vista: Subir (Por defecto) -->
             <div id="view-upload" class="section-view <?php echo $activeTab === 'upload' ? 'opacity-100' : 'hidden opacity-0'; ?> transition-opacity duration-300">
                 <h2 class="text-2xl font-bold text-white mb-6">Subir Nuevo Contenido</h2>
                 
                 <div class="grid lg:grid-cols-3 gap-8">
-                    <!-- Song Upload Card -->
+                    <!-- Tarjeta de subida de canción -->
                     <div class="lg:col-span-2 glass-panel rounded-2xl p-8">
                         <div class="flex items-center gap-3 mb-8">
                             <i data-lucide="music" class="text-yellow-500 w-6 h-6"></i>
@@ -460,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-6">
-                                <!-- Cover Upload -->
+                                <!-- Subida de carátula -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Carátula</label>
                                     <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-all group relative overflow-hidden">
@@ -473,7 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     </label>
                                 </div>
 
-                                <!-- Audio Upload -->
+                                <!-- Subida de audio -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Archivo de Audio</label>
                                     <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group">
@@ -494,7 +494,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </form>
                     </div>
 
-                    <!-- Video Add Card -->
+                    <!-- Tarjeta de adición de video -->
                     <div class="glass-panel rounded-2xl p-8 h-full">
                         <div class="flex items-center gap-3 mb-8">
                             <i data-lucide="video" class="text-red-500 w-6 h-6"></i>
@@ -529,7 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
 
-            <!-- View: Library (Hidden by default) -->
+            <!-- Vista: Biblioteca (Oculta por defecto) -->
             <div id="view-library" class="section-view <?php echo $activeTab === 'library' ? 'opacity-100' : 'hidden opacity-0'; ?> transition-opacity duration-300">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <h2 class="text-2xl font-bold text-white">Biblioteca Musical</h2>
@@ -583,7 +583,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
 
-            <!-- View: Video Library -->
+            <!-- Vista: Biblioteca de videos -->
             <div id="view-video-library" class="section-view <?php echo $activeTab === 'video-library' ? 'opacity-100' : 'hidden opacity-0'; ?> transition-opacity duration-300">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-white">Biblioteca de Videos</h2>
@@ -628,11 +628,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
 
-            <!-- View: Statistics -->
+            <!-- Vista: Estadísticas -->
             <div id="view-stats" class="section-view hidden opacity-0 transition-opacity duration-300">
                 <h2 class="text-2xl font-bold text-white mb-6">Panel de Estadísticas</h2>
                 
-                <!-- Detailed Stats Grid -->
+                <!-- Cuadrícula de estadísticas detalladas -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                     <div class="glass-panel p-6 rounded-2xl">
                         <div class="flex items-center justify-between mb-4">
@@ -666,7 +666,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     </div>
                 </div>
 
-                <!-- Recent Activity Feed -->
+                <!-- Feed de actividad reciente -->
                 <div class="glass-panel rounded-2xl p-8 h-[500px] flex flex-col">
                     <h3 class="text-xl font-bold text-white mb-6">Actividad Reciente</h3>
                     <div class="space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1">
@@ -709,23 +709,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
     </div>
 
-    <!-- Circular Progress Banner -->
+    <!-- Banner de progreso circular -->
     <div id="upload-progress-banner" class="fixed bottom-0 left-0 w-full z-50 bg-[#111] border-t border-yellow-500/30 p-4 transform translate-y-full transition-transform duration-300 shadow-[0_-5px_30px_rgba(0,0,0,0.8)]">
         <div id="banner-inner" class="max-w-4xl mx-auto flex items-center justify-between transition-all duration-300">
             
-            <!-- Left: Icon & Text -->
+            <!-- Izquierda: Icono y Texto -->
             <div class="flex items-center gap-6">
-                <!-- Circular Progress Ring -->
+                <!-- Anillo de progreso circular -->
                 <div class="relative w-14 h-14 flex items-center justify-center">
                     <svg class="w-full h-full transform -rotate-90">
                         <circle cx="28" cy="28" r="24" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-800" />
                         <circle id="progress-ring" cx="28" cy="28" r="24" stroke="currentColor" stroke-width="4" fill="transparent" class="text-yellow-500 transition-all duration-300 ease-out" stroke-dasharray="150.72" stroke-dashoffset="150.72" />
                     </svg>
-                    <!-- Check Icon (Hidden by default) -->
+                    <!-- Icono de verificación (Oculto por defecto) -->
                     <div id="success-checkmark" class="absolute inset-0 flex items-center justify-center opacity-0 scale-50 transition-all duration-300 text-green-500">
                         <i data-lucide="check" class="w-8 h-8"></i>
                     </div>
-                     <!-- Percentage Text -->
+                     <!-- Texto de porcentaje -->
                     <span id="progress-text" class="absolute text-[10px] font-bold text-white">0%</span>
                 </div>
 
@@ -735,7 +735,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
 
-            <!-- Right: Action Button -->
+            <!-- Derecha: Botón de acción -->
              <a href="index.php" id="upload-back-btn" class="hidden opacity-0 transform translate-x-4 transition-all duration-500 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full font-medium flex items-center gap-2 group">
                 <span>Volver al Sitio</span>
                 <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
@@ -744,7 +744,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
     </div>
 
-    <!-- Edit Video Modal -->
+    <!-- Modal de edición de video -->
     <div id="edit-video-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="edit-video-backdrop"></div>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4 scale-95 opacity-0 transition-all duration-300" id="edit-video-content">
@@ -782,7 +782,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Modal de edición -->
     <div id="edit-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="edit-backdrop"></div>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4 scale-95 opacity-0 transition-all duration-300" id="edit-content">
@@ -890,7 +890,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ring.style.strokeDasharray = `${circumference} ${circumference}`;
             ring.style.strokeDashoffset = circumference;
 
-            // Reset UI
+            // Restablecer UI
             banner.classList.remove('translate-y-full', 'bg-green-900/40', 'border-green-500/50');
             backBtn.classList.add('hidden', 'opacity-0');
             checkmark.classList.add('opacity-0', 'scale-50');
@@ -942,7 +942,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             ring.classList.remove('text-yellow-500');
                             ring.classList.add('text-green-500');
                             
-                            // Show Checkmark
+                            // Mostrar marca de verificación
                             percentText.classList.add('opacity-0');
                             checkmark.classList.remove('opacity-0', 'scale-50');
                             
@@ -1266,7 +1266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
 
-        // MP3 Filename Update
+        // Actualización de nombre de archivo MP3
         function updateFilename(input) {
             if (input.files.length > 0) {
                 document.getElementById('audio-filename').textContent = input.files[0].name;

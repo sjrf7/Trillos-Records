@@ -13,9 +13,9 @@ if (!isset($input['credential'])) {
 
 $id_token = $input['credential'];
 
-// Verify the token using Google's API
-// Note: In production you should use a library like google-api-php-client, 
-// but for this simple integration we can check the tokeninfo endpoint.
+// Verificar el token usando la API de Google
+// Nota: En producción deberías usar una biblioteca como google-api-php-client,
+// pero para esta integración simple podemos verificar el endpoint tokeninfo.
 $url = "https://oauth2.googleapis.com/tokeninfo?id_token=" . $id_token;
 $response = file_get_contents($url);
 
@@ -31,8 +31,8 @@ if (isset($payload['error_description'])) {
     exit;
 }
 
-// Check audience (Client ID) matches if you want extra security here, 
-// but we just proceed with the verified email/sub.
+// Verificar que la audiencia (Client ID) coincida si quieres seguridad extra aquí,
+// pero simplemente procedemos con el email/sub verificado.
 
 $google_id = $payload['sub'];
 $email = $payload['email'];
@@ -40,13 +40,13 @@ $name = $payload['name'];
 $picture = $payload['picture'];
 
 try {
-    // Check if user exists by google_id or email
+    // Verificar si el usuario existe por google_id o email
     $stmt = $pdo->prepare("SELECT * FROM users WHERE google_id = ? OR email = ?");
     $stmt->execute([$google_id, $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
-        // Update google_id and picture if missing or changed
+        // Actualizar google_id y foto si faltan o cambiaron
         $updateNeeded = false;
         if (!$user['google_id']) {
             $user['google_id'] = $google_id;
@@ -62,14 +62,14 @@ try {
             $stmt->execute([$user['google_id'], $user['profile_pic'], $user['id']]);
         }
 
-        // Login user
+        // Iniciar sesión de usuario
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['full_name'];
         $_SESSION['role'] = $user['role'];
 
     } else {
-        // Create new user
-        // Generate a random password hash since they use Google
+        // Crear nuevo usuario
+        // Generar un hash de contraseña aleatoria ya que usan Google
         $random_pass = bin2hex(random_bytes(16));
         $hash = password_hash($random_pass, PASSWORD_DEFAULT);
 

@@ -8,7 +8,7 @@ $token = $_GET['token'] ?? '';
 $valid_token = false;
 $email = '';
 
-// Validate token
+// Validar token
 if (!empty($token)) {
     $stmt = $pdo->prepare("SELECT email, expires_at FROM password_resets WHERE token = ?");
     $stmt->execute([$token]);
@@ -28,7 +28,7 @@ if (!empty($token)) {
     }
 }
 
-// Process password reset
+// Procesar restablecimiento de contraseña
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
@@ -43,17 +43,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
         $message = "La contraseña no cumple con los requisitos de seguridad.";
         $msg_type = "error";
     } else {
-        // Update password
+        // Actualizar contraseña
         $hash = password_hash($new_password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
         
         if ($stmt->execute([$hash, $email])) {
-            // Delete used token
+            // Eliminar token usado
             $pdo->prepare("DELETE FROM password_resets WHERE token = ?")->execute([$token]);
             
             $message = "¡Contraseña actualizada exitosamente! Ya puedes iniciar sesión.";
             $msg_type = "success";
-            $valid_token = false; // Prevent form from showing again
+            $valid_token = false; // Prevenir que el formulario se muestre de nuevo
         } else {
             $message = "Error al actualizar la contraseña.";
             $msg_type = "error";
@@ -166,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
 
 <body>
     <div class="w-full max-w-md p-6 my-auto">
-        <!-- Header -->
+        <!-- Encabezado -->
         <div class="text-center mb-8">
             <a href="login.php" class="inline-block mb-4 group">
                 <div class="w-16 h-16 rounded-full border-2 border-yellow-500/30 flex items-center justify-center mx-auto overflow-hidden group-hover:border-yellow-500 transition-colors">
@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
             <p class="text-gray-400 text-sm">Crea una contraseña segura</p>
         </div>
 
-        <!-- Glass Card -->
+        <!-- Tarjeta de cristal -->
         <div class="glass-card rounded-2xl p-8 relative overflow-hidden">
             <?php if ($valid_token): ?>
             <form action="reset-password.php?token=<?php echo htmlspecialchars($token); ?>" method="POST">
@@ -186,7 +186,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
                     <i data-lucide="lock" class="input-icon w-5 h-5"></i>
                 </div>
 
-                <!-- Password Requirements -->
+                <!-- Requisitos de contraseña -->
                 <div class="mb-4 text-xs text-gray-500 space-y-1 pl-1">
                     <p class="font-medium mb-1 text-gray-400">La contraseña debe tener:</p>
                     <div class="flex items-center space-x-2 req-item" id="req-lower">
@@ -230,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
         </div>
     </div>
 
-    <!-- Message Modal -->
+    <!-- Modal de mensaje -->
     <div id="msg-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-[200]">
         <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl shadow-2xl max-w-sm text-center">
             <i id="msg-icon" data-lucide="alert-circle" class="w-12 h-12 text-yellow-500 mx-auto mb-3"></i>
@@ -242,27 +242,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $valid_token) {
     <script>
         lucide.createIcons();
 
-        // Password validation
+        // Validación de contraseña
         const passwordInput = document.getElementById('new_password');
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
                 const val = this.value;
                 
-                // Check Lowercase
+                // Verificar minúsculas
                 if (/[a-z]/.test(val)) {
                     setValid(document.getElementById('req-lower'));
                 } else {
                     setInvalid(document.getElementById('req-lower'));
                 }
 
-                // Check Uppercase
+                // Verificar mayúsculas
                 if (/[A-Z]/.test(val)) {
                     setValid(document.getElementById('req-upper'));
                 } else {
                     setInvalid(document.getElementById('req-upper'));
                 }
 
-                // Check Special
+                // Verificar caracteres especiales
                 if (/[^A-Za-z0-9]/.test(val)) {
                     setValid(document.getElementById('req-special'));
                 } else {

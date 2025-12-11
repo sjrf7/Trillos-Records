@@ -13,28 +13,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Por favor ingresa tu correo electrónico.";
         $msg_type = "error";
     } else {
-        // Check if email exists
+        // Verificar si el correo existe
         $stmt = $pdo->prepare("SELECT id, full_name FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($user) {
-            // Generate secure token
+            // Generar token seguro
             $token = bin2hex(random_bytes(32));
             $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            // Delete old tokens for this email
+            // Eliminar tokens antiguos para este correo
             $stmt = $pdo->prepare("DELETE FROM password_resets WHERE email = ?");
             $stmt->execute([$email]);
             
-            // Insert new token
+            // Insertar nuevo token
             $stmt = $pdo->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
             $stmt->execute([$email, $token, $expires_at]);
             
-            // Create reset link
+            // Crear enlace de restablecimiento
             $reset_link = "http://localhost/TrillosRecords/reset-password.php?token=" . $token;
             
-            // Send email
+            // Enviar correo
             if (sendPasswordResetEmail($email, $reset_link, $user['full_name'])) {
                 $message = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
                 $msg_type = "success";
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $msg_type = "error";
             }
         } else {
-            // Don't reveal if email exists or not (security best practice)
+            // No revelar si el correo existe o no (mejor práctica de seguridad)
             $message = "Si el correo existe, recibirás un enlace de recuperación.";
             $msg_type = "success";
         }
@@ -155,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <div class="w-full max-w-md p-6 my-auto">
-        <!-- Header -->
+        <!-- Encabezado -->
         <div class="text-center mb-8">
             <a href="login.php" class="inline-block mb-4 group">
                 <div class="w-16 h-16 rounded-full border-2 border-yellow-500/30 flex items-center justify-center mx-auto overflow-hidden group-hover:border-yellow-500 transition-colors">
@@ -166,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p class="text-gray-400 text-sm">Ingresa tu correo para recibir el enlace</p>
         </div>
 
-        <!-- Glass Card -->
+        <!-- Tarjeta de cristal -->
         <div class="glass-card rounded-2xl p-8 relative overflow-hidden">
             <form action="forgot-password.php" method="POST">
                 <div class="input-group">
@@ -187,7 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Message Modal -->
+    <!-- Modal de mensaje -->
     <div id="msg-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-[200]">
         <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl shadow-2xl max-w-sm text-center">
             <i id="msg-icon" data-lucide="alert-circle" class="w-12 h-12 text-yellow-500 mx-auto mb-3"></i>

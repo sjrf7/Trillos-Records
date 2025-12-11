@@ -15,7 +15,7 @@ function loadEnv($path)
         $name = trim($name);
         $value = trim($value);
 
-        // Remove quotes if present
+        // Eliminar comillas si están presentes
         if (preg_match('/^"(.*)"$/', $value, $matches)) {
             $value = $matches[1];
         } elseif (preg_match("/^'(.*)'$/", $value, $matches)) {
@@ -30,6 +30,6 @@ function loadEnv($path)
     }
 }
 
-// Automatically load .env from the same directory
+// Cargar automáticamente .env desde el mismo directorio
 loadEnv(__DIR__ . '/.env');
 ?>
